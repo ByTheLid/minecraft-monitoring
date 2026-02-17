@@ -1,0 +1,24 @@
+# Environment
+.env
+
+# Dependencies
+vendor/
+
+# Storage
+storage/logs/*
+storage/cache/*
+!storage/logs/.gitkeep
+!storage/cache/.gitkeep
+
+# OSPanel config (local)
+.osp/
+
+# IDE & tools
+.claude/
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
