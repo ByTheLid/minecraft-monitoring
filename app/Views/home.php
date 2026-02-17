@@ -20,6 +20,7 @@
             <button class="btn btn-sm btn-secondary" id="refreshBtn" onclick="refreshServers()" title="Refresh server data">
                 <i class="fas fa-sync-alt"></i>
             </button>
+            <span id="refreshStatus" class="refresh-status"></span>
         </div>
         <a href="/servers" class="btn btn-sm btn-secondary">View All <i class="fas fa-arrow-right"></i></a>
     </div>
@@ -137,6 +138,15 @@
         list.innerHTML = servers.map((s, i) => renderServerCard(s, i + 1)).join('');
     }
 
+    let refreshTimer = null;
+
+    function setRefreshStatus(text, type) {
+        const el = document.getElementById('refreshStatus');
+        if (!el) return;
+        el.textContent = text;
+        el.className = 'refresh-status' + (type ? ' refresh-status--' + type : '');
+    }
+
     function setRefreshBtnState(loading) {
         const btn = document.getElementById('refreshBtn');
         if (!btn) return;
@@ -149,19 +159,46 @@
         }
     }
 
+    function startCountdown(seconds) {
+        if (refreshTimer) clearInterval(refreshTimer);
+        let left = seconds;
+        setRefreshStatus('Pinging servers... ~' + left + 's', 'loading');
+        refreshTimer = setInterval(() => {
+            left--;
+            if (left > 0) {
+                setRefreshStatus('Pinging servers... ~' + left + 's', 'loading');
+            } else {
+                setRefreshStatus('Almost done...', 'loading');
+            }
+        }, 1000);
+    }
+
+    function stopCountdown(text, type) {
+        if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+        setRefreshStatus(text, type);
+        if (text) setTimeout(() => setRefreshStatus('', ''), 4000);
+    }
+
     async function doRefresh(force) {
         const url = '/api/servers/refresh' + (force ? '?force=1' : '');
         setRefreshBtnState(true);
+        if (force) startCountdown(15);
+        else setRefreshStatus('Updating...', 'loading');
         try {
             const res = await api.get(url);
             if (res.success && res.data.refreshed && res.data.servers) {
                 updateServerList(res.data.servers);
-                if (force) showToast('Servers refreshed!', 'success');
-            } else if (res.success && !res.data.refreshed && force) {
-                const sec = res.data.retry_after || 0;
-                showToast('Please wait ' + sec + 's before refreshing', 'info');
+                const msg = res.data.online + '/' + res.data.total + ' online';
+                stopCountdown(msg, 'done');
+            } else if (res.success && !res.data.refreshed) {
+                stopCountdown('', '');
+                if (force) {
+                    const sec = res.data.retry_after || 0;
+                    showToast('Please wait ' + sec + 's before refreshing', 'info');
+                }
             }
         } catch (e) {
+            stopCountdown('Error', 'error');
             if (force) showToast('Refresh failed', 'error');
         } finally {
             setRefreshBtnState(false);

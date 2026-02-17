@@ -1095,6 +1095,27 @@ select.form-control {
 .gap-2 { gap: 16px; }
 .hidden { display: none !important; }
 
+/* --- Refresh Status --- */
+.refresh-status {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.refresh-status--loading {
+    color: var(--blue);
+}
+
+.refresh-status--done {
+    color: var(--accent);
+}
+
+.refresh-status--error {
+    color: var(--red);
+}
+
 /* --- Copy IP --- */
 .copy-ip {
     cursor: pointer;
