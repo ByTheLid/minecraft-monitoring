@@ -138,7 +138,6 @@
         list.innerHTML = servers.map((s, i) => renderServerCard(s, i + 1)).join('');
     }
 
-    let refreshTimer = null;
     let hideTimer = null;
 
     function setRefreshStatus(html, type) {
@@ -166,45 +165,34 @@
             : '<i class="fas fa-sync-alt"></i>';
     }
 
-    function startCountdown(seconds) {
-        if (refreshTimer) clearInterval(refreshTimer);
-        let left = seconds;
-        const render = (s) => '<i class="fas fa-satellite-dish"></i> Pinging servers... ~' + s + 's';
-        setRefreshStatus(render(left), 'loading');
-        refreshTimer = setInterval(() => {
-            left--;
-            setRefreshStatus(left > 0
-                ? render(left)
-                : '<i class="fas fa-spinner fa-spin"></i> Almost done...', 'loading');
-        }, 1000);
-    }
-
-    function stopCountdown() {
-        if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
-    }
-
     async function doRefresh(force) {
         const url = '/api/servers/refresh' + (force ? '?force=1' : '');
         setRefreshBtnState(true);
 
         if (force) {
-            startCountdown(15);
-        } else {
-            setRefreshStatus('<i class="fas fa-spinner fa-spin"></i> Updating...', 'loading');
+            setRefreshStatus('<i class="fas fa-spinner fa-spin"></i> Loading...', 'loading');
         }
 
         try {
             const res = await api.get(url);
 
             if (res.success && res.data.refreshed && res.data.servers) {
-                stopCountdown();
                 updateServerList(res.data.servers);
-                const msg = '<i class="fas fa-check-circle"></i> ' + res.data.online + '/' + res.data.total + ' online';
-                setRefreshStatus(msg, 'done');
-                clearRefreshStatus(5000);
-                if (force) showToast(res.data.online + '/' + res.data.total + ' servers online', 'success');
+                const stats = res.data.online + '/' + res.data.total + ' online';
+
+                if (res.data.ping_triggered) {
+                    // Background ping was launched — show that data will update soon
+                    const msg = '<i class="fas fa-satellite-dish"></i> ' + stats + ' — updating in background';
+                    setRefreshStatus(msg, 'loading');
+                    clearRefreshStatus(6000);
+                    if (force) showToast(stats + ' — ping triggered in background', 'success');
+                } else {
+                    const msg = '<i class="fas fa-check-circle"></i> ' + stats;
+                    setRefreshStatus(msg, 'done');
+                    clearRefreshStatus(5000);
+                    if (force) showToast(stats, 'success');
+                }
             } else if (res.success && !res.data.refreshed) {
-                stopCountdown();
                 if (force && res.data.retry_after) {
                     const sec = res.data.retry_after;
                     setRefreshStatus('<i class="fas fa-clock"></i> Cooldown ' + sec + 's', 'loading');
@@ -215,7 +203,6 @@
                 }
             }
         } catch (e) {
-            stopCountdown();
             // Only show error on manual refresh, silently fail on auto
             if (force) {
                 setRefreshStatus('<i class="fas fa-exclamation-circle"></i> Failed', 'error');

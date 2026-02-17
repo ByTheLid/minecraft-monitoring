@@ -7,98 +7,118 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Core\Database;
 use App\Models\Server;
-use App\Models\ServerStat;
 use App\Models\Setting;
-use App\Services\MinecraftPing;
 
 class RefreshApiController extends Controller
 {
+    /**
+     * GET /api/servers/refresh[?force=1]
+     *
+     * Always returns cached server data instantly (never pings inline).
+     * If cooldown passed, triggers cron/ping.php as a background process.
+     * Scales to thousands of servers without blocking the HTTP response.
+     */
     public function refresh(Request $request): Response
     {
         $force = (bool) $request->query('force', '');
         $ip = $request->ip();
-
-        // Rate limit: global 60s, manual (force) 30s per IP
-        $lastGlobal = (int) Setting::get('last_refresh_time', '0');
         $now = time();
+
+        $pingTriggered = false;
+        $lastGlobal = (int) Setting::get('last_refresh_time', '0');
 
         if ($force) {
             // Per-IP rate limit: 30 seconds
             $lastIp = (int) Setting::get("last_refresh_ip_{$ip}", '0');
             if ($now - $lastIp < 30) {
-                $remaining = 30 - ($now - $lastIp);
                 return $this->success([
                     'refreshed' => false,
                     'reason' => 'rate_limited',
-                    'retry_after' => $remaining,
+                    'retry_after' => 30 - ($now - $lastIp),
                 ]);
+            }
+            Setting::set("last_refresh_ip_{$ip}", (string) $now);
+
+            // Trigger background ping if global cooldown passed
+            if ($now - $lastGlobal >= 60) {
+                $pingTriggered = $this->triggerBackgroundPing();
+                if ($pingTriggered) {
+                    Setting::set('last_refresh_time', (string) $now);
+                }
             }
         } else {
-            // Auto-refresh: global 60 seconds
-            if ($now - $lastGlobal < 60) {
-                return $this->success([
-                    'refreshed' => false,
-                    'reason' => 'too_soon',
-                    'retry_after' => 60 - ($now - $lastGlobal),
-                ]);
+            // Auto-refresh: trigger background ping if >60s since last
+            if ($now - $lastGlobal >= 60) {
+                $pingTriggered = $this->triggerBackgroundPing();
+                if ($pingTriggered) {
+                    Setting::set('last_refresh_time', (string) $now);
+                }
             }
         }
 
-        // Do the refresh
-        Setting::set('last_refresh_time', (string) $now);
-        if ($force) {
-            Setting::set("last_refresh_ip_{$ip}", (string) $now);
-        }
-
-        $servers = Server::getActiveApproved();
-        $online = 0;
-        $total = count($servers);
-
-        foreach ($servers as $server) {
-            $ping = new MinecraftPing($server['ip'], $server['port'], 3);
-            $result = $ping->ping();
-
-            ServerStat::record($server['id'], $result);
-
-            $db = Database::getInstance();
-            $stmt = $db->prepare(
-                "INSERT INTO server_status_cache (server_id, is_online, players_online, players_max, version, ping_ms, motd, favicon_base64, last_checked_at)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW())
-                 ON DUPLICATE KEY UPDATE
-                    is_online = VALUES(is_online),
-                    players_online = VALUES(players_online),
-                    players_max = VALUES(players_max),
-                    version = VALUES(version),
-                    ping_ms = VALUES(ping_ms),
-                    motd = VALUES(motd),
-                    favicon_base64 = VALUES(favicon_base64),
-                    last_checked_at = NOW()"
-            );
-
-            $stmt->execute([
-                $server['id'],
-                $result['is_online'] ? 1 : 0,
-                $result['players_online'],
-                $result['players_max'],
-                $result['version'],
-                $result['ping_ms'],
-                $result['motd'],
-                $result['favicon'],
-            ]);
-
-            if ($result['is_online']) {
-                $online++;
-            }
-        }
-
-        // Return updated server list
+        // Always return current cached data instantly
         $topServers = Server::getApproved(1, 10, 'rank');
+        $stats = $this->getStats();
 
         return $this->success([
             'refreshed' => true,
-            'total' => $total,
-            'online' => $online,
+            'ping_triggered' => $pingTriggered,
+            'total' => $stats['total'],
+            'online' => $stats['online'],
             'servers' => $topServers['data'],
         ]);
+    }
+
+    /**
+     * Launch cron/ping.php as a non-blocking background process.
+     * Works on Windows (popen) and Linux (exec &).
+     */
+    private function triggerBackgroundPing(): bool
+    {
+        $pingScript = dirname(__DIR__, 3) . '/cron/ping.php';
+
+        if (!file_exists($pingScript)) {
+            return false;
+        }
+
+        // Prevent concurrent pings via lock file
+        $lockFile = dirname(__DIR__, 3) . '/storage/cache/ping.lock';
+        if (file_exists($lockFile)) {
+            $lockAge = time() - (int) filemtime($lockFile);
+            // Lock expires after 5 minutes (safety net)
+            if ($lockAge < 300) {
+                return false;
+            }
+        }
+
+        $phpBinary = PHP_BINARY ?: 'php';
+
+        if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+            $cmd = '"' . $phpBinary . '" "' . $pingScript . '"';
+            pclose(popen('start /B ' . $cmd, 'r'));
+        } else {
+            $cmd = escapeshellarg($phpBinary) . ' ' . escapeshellarg($pingScript);
+            exec($cmd . ' > /dev/null 2>&1 &');
+        }
+
+        return true;
+    }
+
+    /**
+     * Get online/total counts from cache (fast, indexed queries).
+     */
+    private function getStats(): array
+    {
+        $db = Database::getInstance();
+
+        $online = (int) $db->query(
+            "SELECT COUNT(*) FROM server_status_cache WHERE is_online = 1"
+        )->fetchColumn();
+
+        $total = (int) $db->query(
+            "SELECT COUNT(*) FROM servers WHERE is_active = 1 AND is_approved = 1"
+        )->fetchColumn();
+
+        return compact('online', 'total');
     }
 }

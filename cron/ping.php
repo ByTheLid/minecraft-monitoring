@@ -2,6 +2,7 @@
 
 // Ping all active approved servers
 // Cron: every 3 minutes
+// Also triggered on-demand from RefreshApiController (background process)
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -12,6 +13,22 @@ use App\Models\Server;
 use App\Models\ServerStat;
 
 Env::load(__DIR__ . '/../.env');
+
+// --- Lock file to prevent concurrent runs ---
+$lockFile = __DIR__ . '/../storage/cache/ping.lock';
+if (file_exists($lockFile)) {
+    $lockAge = time() - (int) filemtime($lockFile);
+    if ($lockAge < 300) {
+        echo "Another ping process is running (lock age: {$lockAge}s). Skipping.\n";
+        exit(0);
+    }
+}
+file_put_contents($lockFile, (string) getmypid());
+
+// Remove lock on exit (normal or error)
+register_shutdown_function(function () use ($lockFile) {
+    @unlink($lockFile);
+});
 
 $startTime = microtime(true);
 
@@ -27,7 +44,7 @@ try {
 
     foreach ($batches as $batch) {
         foreach ($batch as $server) {
-            $ping = new MinecraftPing($server['ip'], $server['port'], 5);
+            $ping = new MinecraftPing($server['ip'], $server['port'], 3);
             $result = $ping->ping();
 
             // Record stat
