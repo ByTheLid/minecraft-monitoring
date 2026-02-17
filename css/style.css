@@ -1097,23 +1097,43 @@ select.form-control {
 
 /* --- Refresh Status --- */
 .refresh-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text-muted);
-    transition: var(--transition);
     white-space: nowrap;
+    padding: 4px 12px;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    opacity: 0;
+    transform: translateX(-8px);
+}
+
+.refresh-status:empty {
+    display: none;
 }
 
 .refresh-status--loading {
+    opacity: 1;
+    transform: translateX(0);
     color: var(--blue);
+    background: var(--blue-subtle);
 }
 
 .refresh-status--done {
+    opacity: 1;
+    transform: translateX(0);
     color: var(--accent);
+    background: var(--accent-subtle);
 }
 
 .refresh-status--error {
+    opacity: 1;
+    transform: translateX(0);
     color: var(--red);
+    background: var(--red-subtle);
 }
 
 /* --- Copy IP --- */

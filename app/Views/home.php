@@ -139,67 +139,91 @@
     }
 
     let refreshTimer = null;
+    let hideTimer = null;
 
-    function setRefreshStatus(text, type) {
+    function setRefreshStatus(html, type) {
         const el = document.getElementById('refreshStatus');
         if (!el) return;
-        el.textContent = text;
+        el.innerHTML = html;
         el.className = 'refresh-status' + (type ? ' refresh-status--' + type : '');
+    }
+
+    function clearRefreshStatus(delay) {
+        if (hideTimer) clearTimeout(hideTimer);
+        if (delay) {
+            hideTimer = setTimeout(() => setRefreshStatus('', ''), delay);
+        } else {
+            setRefreshStatus('', '');
+        }
     }
 
     function setRefreshBtnState(loading) {
         const btn = document.getElementById('refreshBtn');
         if (!btn) return;
-        if (loading) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-sync-alt fa-spin"></i>';
-        } else {
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-sync-alt"></i>';
-        }
+        btn.disabled = loading;
+        btn.innerHTML = loading
+            ? '<i class="fas fa-sync-alt fa-spin"></i>'
+            : '<i class="fas fa-sync-alt"></i>';
     }
 
     function startCountdown(seconds) {
         if (refreshTimer) clearInterval(refreshTimer);
         let left = seconds;
-        setRefreshStatus('Pinging servers... ~' + left + 's', 'loading');
+        const render = (s) => '<i class="fas fa-satellite-dish"></i> Pinging servers... ~' + s + 's';
+        setRefreshStatus(render(left), 'loading');
         refreshTimer = setInterval(() => {
             left--;
-            if (left > 0) {
-                setRefreshStatus('Pinging servers... ~' + left + 's', 'loading');
-            } else {
-                setRefreshStatus('Almost done...', 'loading');
-            }
+            setRefreshStatus(left > 0
+                ? render(left)
+                : '<i class="fas fa-spinner fa-spin"></i> Almost done...', 'loading');
         }, 1000);
     }
 
-    function stopCountdown(text, type) {
+    function stopCountdown() {
         if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
-        setRefreshStatus(text, type);
-        if (text) setTimeout(() => setRefreshStatus('', ''), 4000);
     }
 
     async function doRefresh(force) {
         const url = '/api/servers/refresh' + (force ? '?force=1' : '');
         setRefreshBtnState(true);
-        if (force) startCountdown(15);
-        else setRefreshStatus('Updating...', 'loading');
+
+        if (force) {
+            startCountdown(15);
+        } else {
+            setRefreshStatus('<i class="fas fa-spinner fa-spin"></i> Updating...', 'loading');
+        }
+
         try {
             const res = await api.get(url);
+
             if (res.success && res.data.refreshed && res.data.servers) {
+                stopCountdown();
                 updateServerList(res.data.servers);
-                const msg = res.data.online + '/' + res.data.total + ' online';
-                stopCountdown(msg, 'done');
+                const msg = '<i class="fas fa-check-circle"></i> ' + res.data.online + '/' + res.data.total + ' online';
+                setRefreshStatus(msg, 'done');
+                clearRefreshStatus(5000);
+                if (force) showToast(res.data.online + '/' + res.data.total + ' servers online', 'success');
             } else if (res.success && !res.data.refreshed) {
-                stopCountdown('', '');
-                if (force) {
-                    const sec = res.data.retry_after || 0;
+                stopCountdown();
+                if (force && res.data.retry_after) {
+                    const sec = res.data.retry_after;
+                    setRefreshStatus('<i class="fas fa-clock"></i> Cooldown ' + sec + 's', 'loading');
+                    clearRefreshStatus(3000);
                     showToast('Please wait ' + sec + 's before refreshing', 'info');
+                } else {
+                    clearRefreshStatus(0);
                 }
             }
         } catch (e) {
-            stopCountdown('Error', 'error');
-            if (force) showToast('Refresh failed', 'error');
+            stopCountdown();
+            // Only show error on manual refresh, silently fail on auto
+            if (force) {
+                setRefreshStatus('<i class="fas fa-exclamation-circle"></i> Failed', 'error');
+                clearRefreshStatus(4000);
+                showToast('Refresh failed', 'error');
+            } else {
+                clearRefreshStatus(0);
+            }
         } finally {
             setRefreshBtnState(false);
         }
@@ -210,7 +234,7 @@
         doRefresh(true);
     };
 
-    // Auto-refresh on page load
+    // Auto-refresh on page load (silent)
     doRefresh(false);
 })();
 </script>
