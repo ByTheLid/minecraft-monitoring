@@ -123,7 +123,17 @@
             <?= csrf_field() ?>
             <div class="form-group">
                 <label>Add Manual Boost</label>
-                <div class="flex gap-1 mb-1">
+                
+                <select name="package_id" id="boostPackageSelect" class="form-control mb-1" onchange="toggleCustomBoostFields()">
+                    <option value="custom">-- Custom Boost --</option>
+                    <?php foreach ($packages as $pkg): ?>
+                        <option value="<?= $pkg['id'] ?>">
+                            <?= e($pkg['name']) ?> (<?= $pkg['points'] ?> pts / <?= $pkg['duration_days'] ?> days)
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+
+                <div id="customBoostFields" class="flex gap-1 mb-1">
                     <input type="number" name="days" class="form-control" placeholder="Days" value="7">
                     <input type="number" name="points" class="form-control" placeholder="Points" value="0">
                 </div>
@@ -134,10 +144,25 @@
 </div>
 
 <script>
+function toggleCustomBoostFields() {
+    var select = document.getElementById('boostPackageSelect');
+    var customFields = document.getElementById('customBoostFields');
+    if (select.value === 'custom') {
+        customFields.style.display = 'flex';
+    } else {
+        customFields.style.display = 'none';
+    }
+}
+
 function openTools(id, name) {
     document.getElementById('toolsServerName').innerText = name;
     document.getElementById('voteForm').action = '/admin/servers/' + id + '/vote';
     document.getElementById('boostForm').action = '/admin/servers/' + id + '/boost';
+    
+    // Reset boost selection
+    document.getElementById('boostPackageSelect').value = 'custom';
+    toggleCustomBoostFields();
+
     document.getElementById('toolsModal').style.display = 'flex';
 }
 function closeToolsModal() {
