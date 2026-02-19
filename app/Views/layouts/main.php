@@ -49,18 +49,20 @@
     </nav>
 
     <!-- Flash Messages -->
-    <?php if ($flash = flash('success')): ?>
-        <div class="toast">
-            <div class="alert alert-success"><?= e($flash) ?></div>
-        </div>
-    <?php endif; ?>
-    <?php if ($flash = flash('error')): ?>
-        <div class="toast">
-            <div class="alert alert-error"><?= e($flash) ?></div>
-        </div>
-    <?php endif; ?>
-
-
+    <div class="toast-container" id="toastContainer">
+        <?php if ($flash = flash('success')): ?>
+            <div class="toast success">
+                <i class="fas fa-check-circle"></i>
+                <span><?= e($flash) ?></span>
+            </div>
+        <?php endif; ?>
+        <?php if ($flash = flash('error')): ?>
+            <div class="toast error">
+                <i class="fas fa-exclamation-circle"></i>
+                <span><?= e($flash) ?></span>
+            </div>
+        <?php endif; ?>
+    </div>
     <!-- Vote Modal -->
     <div id="voteModalBackdrop" class="modal-backdrop">
         <div class="modal">

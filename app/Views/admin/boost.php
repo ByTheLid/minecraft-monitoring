@@ -135,72 +135,68 @@
 <!-- Edit Modal -->
 <div id="editModal" class="modal-backdrop">
     <div class="modal">
-        <div class="modal-header">
-            <h3>Edit Package</h3>
-            <span class="close" onclick="closeEditModal()" style="cursor:pointer;">&times;</span>
-        </div>
-        <div class="modal-body">
-            <form id="editForm" method="POST" action="">
-                <?= csrf_field() ?>
-                <div class="form-group">
-                    <label>Name</label>
-                    <input type="text" name="name" id="edit_name" class="form-control" required>
+        <button class="modal-close-btn" onclick="closeEditModal()" title="Close">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 class="mb-2">Edit Package</h2>
+        <form id="editForm" method="POST" action="">
+            <?= csrf_field() ?>
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" name="name" id="edit_name" class="form-control" required>
+            </div>
+            <div class="flex gap-1">
+                <div class="form-group" style="flex:1;">
+                    <label>Price</label>
+                    <input type="number" step="0.01" name="price" id="edit_price" class="form-control" required>
                 </div>
-                <div class="flex gap-1">
-                    <div class="form-group" style="flex:1;">
-                        <label>Price</label>
-                        <input type="number" step="0.01" name="price" id="edit_price" class="form-control" required>
-                    </div>
-                    <div class="form-group" style="flex:1;">
-                        <label>Points</label>
-                        <input type="number" name="points" id="edit_points" class="form-control" required>
-                    </div>
+                <div class="form-group" style="flex:1;">
+                    <label>Points</label>
+                    <input type="number" name="points" id="edit_points" class="form-control" required>
                 </div>
-                <div class="flex gap-1">
-                    <div class="form-group" style="flex:1;">
-                        <label>Days</label>
-                        <input type="number" name="duration_days" id="edit_days" class="form-control" required>
-                    </div>
-                    <div class="form-group" style="flex:1;">
-                        <label>Color</label>
-                        <input type="color" name="color" id="edit_color" class="form-control" style="height:38px;">
-                    </div>
+            </div>
+            <div class="flex gap-1">
+                <div class="form-group" style="flex:1;">
+                    <label>Days</label>
+                    <input type="number" name="duration_days" id="edit_days" class="form-control" required>
                 </div>
-                 <div class="form-group">
-                    <label>Features</label>
-                    <input type="text" name="features" id="edit_features" class="form-control">
+                <div class="form-group" style="flex:1;">
+                    <label>Color</label>
+                    <input type="color" name="color" id="edit_color" class="form-control" style="height:38px; padding:2px;">
                 </div>
-                <div class="form-group">
-                    <label>Active</label>
-                    <select name="is_popular" id="edit_popular" class="form-control">
-                        <option value="0">No</option>
-                        <option value="1">Yes</option>
-                    </select>
-                </div>
-                <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
-            </form>
-        </div>
+            </div>
+            <div class="form-group">
+                <label>Features</label>
+                <input type="text" name="features" id="edit_features" class="form-control">
+            </div>
+            <div class="form-group">
+                <label>Popular</label>
+                <select name="is_popular" id="edit_popular" class="form-control">
+                    <option value="0">No</option>
+                    <option value="1">Yes</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+        </form>
     </div>
 </div>
 
 <!-- Delete Modal -->
 <div id="deleteModal" class="modal-backdrop">
     <div class="modal" style="max-width: 400px;">
-        <div class="modal-header">
-            <h3>Delete Package</h3>
-            <span class="close" onclick="closeDeleteModal()" style="cursor:pointer;">&times;</span>
-        </div>
-        <div class="modal-body">
-            <p class="mb-2 text-red">Are you sure? This cannot be undone.</p>
-            <form id="deleteForm" method="POST" action="">
-                <?= csrf_field() ?>
-                <div class="form-group">
-                    <label>Admin Password</label>
-                    <input type="password" name="password" class="form-control" required placeholder="Password">
-                </div>
-                <button type="submit" class="btn btn-danger btn-block">Delete</button>
-            </form>
-        </div>
+        <button class="modal-close-btn" onclick="closeDeleteModal()" title="Close">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 class="mb-2 text-red">Delete Package</h2>
+        <p class="mb-2">Are you sure? This cannot be undone.</p>
+        <form id="deleteForm" method="POST" action="">
+            <?= csrf_field() ?>
+            <div class="form-group">
+                <label>Admin Password</label>
+                <input type="password" name="password" class="form-control" required placeholder="Password">
+            </div>
+            <button type="submit" class="btn btn-danger btn-block">Confirm Delete</button>
+        </form>
     </div>
 </div>
 
@@ -213,7 +209,6 @@ function openEditModal(pkg) {
     document.getElementById('edit_days').value = pkg.duration_days;
     document.getElementById('edit_color').value = pkg.color;
     document.getElementById('edit_features').value = pkg.features;
-    document.getElementById('edit_popular').value = pkg.is_popular;
     document.getElementById('edit_popular').value = pkg.is_popular;
     document.getElementById('editModal').style.display = 'flex';
 }
@@ -229,15 +224,22 @@ function closeDeleteModal() {
     document.getElementById('deleteModal').style.display = 'none';
 }
 
-// Close modals when clicking outside
-window.onclick = function(event) {
+// Close modals when clicking outside or pressing Escape
+window.addEventListener('click', function(event) {
     var editModal = document.getElementById('editModal');
     var deleteModal = document.getElementById('deleteModal');
-    if (event.target == editModal) {
-        editModal.style.display = "none";
+    if (event.target === editModal) {
+        closeEditModal();
     }
-    if (event.target == deleteModal) {
-        deleteModal.style.display = "none";
+    if (event.target === deleteModal) {
+        closeDeleteModal();
     }
-}
+});
+
+window.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeEditModal();
+        closeDeleteModal();
+    }
+});
 </script>

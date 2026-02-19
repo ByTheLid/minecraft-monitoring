@@ -100,38 +100,36 @@
 <!-- Tools Modal -->
 <div id="toolsModal" class="modal-backdrop">
     <div class="modal">
-        <div class="modal-header">
-            <h3>Server Tools</h3>
-            <span class="close" onclick="closeToolsModal()" style="cursor:pointer;">&times;</span>
-        </div>
-        <div class="modal-body">
-            <h4 id="toolsServerName" class="mb-2">Server Name</h4>
-            
-            <form id="voteForm" method="POST" action="">
-                <?= csrf_field() ?>
-                <div class="form-group">
-                    <label>Add Manual Votes</label>
-                    <div class="flex gap-1">
-                        <input type="number" name="count" class="form-control" value="1" min="1" max="100">
-                        <button class="btn btn-primary">Add Votes</button>
-                    </div>
+        <button class="modal-close-btn" onclick="closeToolsModal()" title="Close">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2 class="mb-2">Server Tools</h2>
+        <h4 id="toolsServerName" class="mb-2" style="color:var(--text-secondary)">Server Name</h4>
+        
+        <form id="voteForm" method="POST" action="">
+            <?= csrf_field() ?>
+            <div class="form-group">
+                <label>Add Manual Votes</label>
+                <div class="flex gap-1">
+                    <input type="number" name="count" class="form-control" value="1" min="1" max="100">
+                    <button class="btn btn-primary">Add Votes</button>
                 </div>
-            </form>
+            </div>
+        </form>
 
-            <hr class="my-2" style="border:0; border-top:1px solid rgba(255,255,255,0.1);">
+        <hr class="my-2" style="border:0; border-top:1px solid rgba(255,255,255,0.1);">
 
-            <form id="boostForm" method="POST" action="">
-                <?= csrf_field() ?>
-                <div class="form-group">
-                    <label>Add Manual Boost</label>
-                    <div class="flex gap-1 mb-1">
-                        <input type="number" name="days" class="form-control" placeholder="Days" value="7">
-                        <input type="number" name="points" class="form-control" placeholder="Points" value="0">
-                    </div>
-                    <button class="btn btn-gold btn-block">Give Boost</button>
+        <form id="boostForm" method="POST" action="">
+            <?= csrf_field() ?>
+            <div class="form-group">
+                <label>Add Manual Boost</label>
+                <div class="flex gap-1 mb-1">
+                    <input type="number" name="days" class="form-control" placeholder="Days" value="7">
+                    <input type="number" name="points" class="form-control" placeholder="Points" value="0">
                 </div>
-            </form>
-        </div>
+                <button class="btn btn-gold btn-block">Give Boost</button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -145,4 +143,18 @@ function openTools(id, name) {
 function closeToolsModal() {
     document.getElementById('toolsModal').style.display = 'none';
 }
+
+// Close modals when clicking outside or pressing Escape
+window.addEventListener('click', function(event) {
+    var toolsModal = document.getElementById('toolsModal');
+    if (event.target === toolsModal) {
+        closeToolsModal();
+    }
+});
+
+window.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeToolsModal();
+    }
+});
 </script>

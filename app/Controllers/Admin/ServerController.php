@@ -79,11 +79,10 @@ class ServerController extends Controller
         $db = Database::getInstance();
         $db->prepare("
             INSERT INTO boost_purchases (server_id, user_id, package_id, points, expires_at)
-            VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY))
+            VALUES (?, ?, NULL, ?, DATE_ADD(NOW(), INTERVAL ? DAY))
         ")->execute([
             $serverId, 
             auth()['id'], 
-            0, // System package ID 0 
             $points, 
             $days
         ]);

@@ -12,13 +12,13 @@
 
     html.setAttribute('data-theme', saved);
     if (toggle) {
-        toggle.textContent = saved === 'dark' ? '🌙' : '☀️';
+        toggle.innerHTML = saved === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
         toggle.addEventListener('click', () => {
             const current = html.getAttribute('data-theme');
             const next = current === 'dark' ? 'light' : 'dark';
             html.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-            toggle.textContent = next === 'dark' ? '🌙' : '☀️';
+            toggle.innerHTML = next === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
         });
     }
 })();
@@ -217,17 +217,40 @@ function voteServer(serverId, btn) {
 // Toast notification
 // ==========================================
 function showToast(message, type = 'info') {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.className = 'toast-container';
+        document.body.appendChild(container);
+    }
+
     const toast = document.createElement('div');
-    toast.className = 'toast';
-    toast.innerHTML = `<div class="alert alert-${type}">${escapeHtml(message)}</div>`;
-    document.body.appendChild(toast);
+    toast.className = `toast ${type}`;
+    
+    let icon = 'fa-info-circle';
+    if(type === 'success') icon = 'fa-check-circle';
+    if(type === 'error') icon = 'fa-exclamation-circle';
+
+    toast.innerHTML = `<i class="fas ${icon}"></i><span>${escapeHtml(message)}</span>`;
+    container.appendChild(toast);
 
     setTimeout(() => {
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(100%)';
+        toast.style.animation = 'fadeOut 0.3s ease forwards';
         setTimeout(() => toast.remove(), 300);
     }, 3000);
 }
+
+// Cleanup server-rendered toasts after animation
+document.addEventListener('DOMContentLoaded', () => {
+    const serverToasts = document.querySelectorAll('.toast');
+    serverToasts.forEach(toast => {
+        setTimeout(() => {
+            toast.style.animation = 'fadeOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    });
+});
 
 // ==========================================
 // Utils
