@@ -7,18 +7,13 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Core\Env;
 use App\Core\Database;
-use App\Models\Setting;
+use App\Services\RankingService;
 
 Env::load(__DIR__ . '/../.env');
 
 try {
     $db = Database::getInstance();
-
-    // Get ranking coefficients
-    $kv = (float) Setting::get('rank_kv', '1.0');
-    $kb = (float) Setting::get('rank_kb', '0.5');
-    $ko = (float) Setting::get('rank_ko', '0.3');
-    $ku = (float) Setting::get('rank_ku', '0.2');
+    $rankingService = RankingService::createFromSettings();
 
     // Get all active approved servers
     $servers = $db->query("SELECT id FROM servers WHERE is_active = 1 AND is_approved = 1")->fetchAll();
@@ -62,7 +57,7 @@ try {
         $uptime = $totalChecks > 0 ? ($onlineChecks / $totalChecks) * 100 : 0;
 
         // Calculate rank score
-        $score = ($votes * $kv) + ($boostPoints * $kb) + ($normalizedOnline * $ko) + ($uptime * $ku);
+        $score = $rankingService->calculateScore($votes, $boostPoints, $normalizedOnline, $uptime);
 
         // Upsert ranking
         $stmt = $db->prepare(

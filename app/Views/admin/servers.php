@@ -48,21 +48,44 @@
                         <?php endif; ?>
                     </td>
                     <td>
-                        <?php if ($server['is_active'] && !$server['is_approved']): ?>
-                            <form method="POST" action="/admin/servers/<?= $server['id'] ?>/approve" style="display:inline;">
-                                <?= csrf_field() ?>
-                                <button class="btn btn-sm btn-primary">Approve</button>
-                            </form>
-                            <form method="POST" action="/admin/servers/<?= $server['id'] ?>/reject" style="display:inline;">
-                                <?= csrf_field() ?>
-                                <button class="btn btn-sm btn-danger">Reject</button>
-                            </form>
-                        <?php elseif ($server['is_active']): ?>
-                            <form method="POST" action="/admin/servers/<?= $server['id'] ?>/reject" style="display:inline;">
-                                <?= csrf_field() ?>
-                                <button class="btn btn-sm btn-danger">Block</button>
-                            </form>
-                        <?php endif; ?>
+                        <div class="flex gap-1">
+                            <!-- Analytics -->
+                            <a href="/admin/analytics?search=<?= urlencode($server['name']) ?>" class="btn btn-sm btn-secondary" title="Analytics">
+                                <i class="fas fa-chart-line"></i>
+                            </a>
+
+                            <!-- Edit (Admin can edit any server) -->
+                            <a href="/dashboard/edit/<?= $server['id'] ?>" class="btn btn-sm btn-secondary" title="Edit">
+                                <i class="fas fa-edit"></i>
+                            </a>
+
+                            <?php if (!$server['is_active']): ?>
+                                <!-- Blocked -->
+                                <form method="POST" action="/admin/servers/<?= $server['id'] ?>/unblock" style="display:inline;">
+                                    <?= csrf_field() ?>
+                                    <button class="btn btn-sm btn-green" title="Unblock"><i class="fas fa-undo"></i></button>
+                                </form>
+                            <?php elseif (!$server['is_approved']): ?>
+                                <!-- Pending -->
+                                <form method="POST" action="/admin/servers/<?= $server['id'] ?>/approve" style="display:inline;">
+                                    <?= csrf_field() ?>
+                                    <button class="btn btn-sm btn-primary" title="Approve"><i class="fas fa-check"></i></button>
+                                </form>
+                                <form method="POST" action="/admin/servers/<?= $server['id'] ?>/reject" style="display:inline;">
+                                    <?= csrf_field() ?>
+                                    <button class="btn btn-sm btn-danger" title="Reject"><i class="fas fa-times"></i></button>
+                                </form>
+                            <?php else: ?>
+                                <!-- Active -->
+                                <form method="POST" action="/admin/servers/<?= $server['id'] ?>/reject" style="display:inline;">
+                                    <?= csrf_field() ?>
+                                    <button class="btn btn-sm btn-danger" title="Block"><i class="fas fa-ban"></i></button>
+                                </form>
+                            <?php endif; ?>
+                            <button onclick="openTools(<?= $server['id'] ?>, '<?= e($server['name']) ?>')" class="btn btn-sm btn-info" title="Tools">
+                                <i class="fas fa-wrench"></i>
+                            </button>
+                        </div>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -71,4 +94,55 @@
             <?php endif; ?>
         </tbody>
     </table>
+    </table>
 </div>
+
+<!-- Tools Modal -->
+<div id="toolsModal" class="modal-backdrop">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Server Tools</h3>
+            <span class="close" onclick="closeToolsModal()" style="cursor:pointer;">&times;</span>
+        </div>
+        <div class="modal-body">
+            <h4 id="toolsServerName" class="mb-2">Server Name</h4>
+            
+            <form id="voteForm" method="POST" action="">
+                <?= csrf_field() ?>
+                <div class="form-group">
+                    <label>Add Manual Votes</label>
+                    <div class="flex gap-1">
+                        <input type="number" name="count" class="form-control" value="1" min="1" max="100">
+                        <button class="btn btn-primary">Add Votes</button>
+                    </div>
+                </div>
+            </form>
+
+            <hr class="my-2" style="border:0; border-top:1px solid rgba(255,255,255,0.1);">
+
+            <form id="boostForm" method="POST" action="">
+                <?= csrf_field() ?>
+                <div class="form-group">
+                    <label>Add Manual Boost</label>
+                    <div class="flex gap-1 mb-1">
+                        <input type="number" name="days" class="form-control" placeholder="Days" value="7">
+                        <input type="number" name="points" class="form-control" placeholder="Points" value="0">
+                    </div>
+                    <button class="btn btn-gold btn-block">Give Boost</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function openTools(id, name) {
+    document.getElementById('toolsServerName').innerText = name;
+    document.getElementById('voteForm').action = '/admin/servers/' + id + '/vote';
+    document.getElementById('boostForm').action = '/admin/servers/' + id + '/boost';
+    document.getElementById('toolsModal').style.display = 'flex';
+}
+function closeToolsModal() {
+    document.getElementById('toolsModal').style.display = 'none';
+}
+</script>

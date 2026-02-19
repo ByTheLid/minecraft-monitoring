@@ -97,7 +97,10 @@ class Server extends Model
 
     public static function countByUser(int $userId): int
     {
-        return static::count('user_id = ? AND is_active = 1', [$userId]);
+        return static::builder()
+            ->where('user_id', $userId)
+            ->where('is_active', 1)
+            ->count();
     }
 
     public static function getByUser(int $userId): array
@@ -116,15 +119,16 @@ class Server extends Model
 
     public static function isDuplicate(string $ip, int $port, ?int $excludeId = null): bool
     {
-        $sql = "SELECT COUNT(*) FROM servers WHERE ip = ? AND port = ? AND is_active = 1";
-        $params = [$ip, $port];
+        $query = static::builder()
+            ->where('ip', $ip)
+            ->where('port', $port)
+            ->where('is_active', 1);
+
         if ($excludeId) {
-            $sql .= " AND id != ?";
-            $params[] = $excludeId;
+            $query->where('id', '!=', $excludeId);
         }
-        $stmt = static::db()->prepare($sql);
-        $stmt->execute($params);
-        return (int) $stmt->fetchColumn() > 0;
+
+        return $query->count() > 0;
     }
 
     public static function getActiveApproved(): array

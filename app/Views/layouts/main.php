@@ -60,7 +60,23 @@
         </div>
     <?php endif; ?>
 
-    <!-- Content -->
+
+    <!-- Vote Modal -->
+    <div id="voteModalBackdrop" class="modal-backdrop">
+        <div class="modal">
+            <h2>Vote for Server</h2>
+            <p style="color:var(--text-secondary); margin-bottom:15px;">Please enter your Minecraft username to receive rewards.</p>
+            <div class="form-group">
+                <label for="voteUsername">Username</label>
+                <input type="text" id="voteUsername" class="form-control" placeholder="Steve" required>
+            </div>
+            <div class="flex" style="justify-content:flex-end; gap:10px; margin-top:20px;">
+                <button class="btn btn-secondary" id="closeVoteModal">Cancel</button>
+                <button class="btn btn-primary" id="confirmVoteBtn">Vote</button>
+            </div>
+        </div>
+    </div>
+
     <main class="page-content">
         <?= $content ?? '' ?>
     </main>

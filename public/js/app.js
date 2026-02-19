@@ -96,28 +96,121 @@ const api = {
 // ==========================================
 // Vote
 // ==========================================
-async function voteServer(serverId, btn) {
-    if (btn.classList.contains('voted') || btn.disabled) return;
+// ==========================================
+// Vote Modal Logic
+// ==========================================
+let currentVoteServerId = null;
+let currentVoteBtn = null;
 
-    btn.disabled = true;
-    btn.textContent = '...';
+const voteModal = {
+    backdrop: document.getElementById('voteModalBackdrop'),
+    input: document.getElementById('voteUsername'),
+    card: document.querySelector('#voteModalBackdrop .modal'),
+    closeBtn: document.getElementById('closeVoteModal'),
+    confirmBtn: document.getElementById('confirmVoteBtn'),
 
-    try {
-        const res = await api.post(`/api/servers/${serverId}/vote`);
+    init() {
+        if (!this.backdrop) return;
 
-        if (res.success) {
-            btn.textContent = `▲ ${res.data.vote_count}`;
-            btn.classList.add('voted');
-            showToast('Vote recorded!', 'success');
-        } else {
-            btn.textContent = '▲ ' + btn.textContent.replace(/[^\d]/g, '');
-            btn.disabled = false;
-            showToast(res.error?.message || 'Vote failed', 'error');
+        // Close events
+        this.closeBtn?.addEventListener('click', () => this.close());
+        this.backdrop.addEventListener('click', (e) => {
+            if (e.target === this.backdrop) this.close();
+        });
+
+        // Confirm events
+        this.confirmBtn?.addEventListener('click', () => this.submit());
+        this.input?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') this.submit();
+        });
+    },
+
+    open(serverId, btn) {
+        currentVoteServerId = serverId;
+        currentVoteBtn = btn;
+        this.input.value = localStorage.getItem('mc_username') || '';
+        this.backdrop.classList.add('active');
+        setTimeout(() => this.input.focus(), 100);
+    },
+
+    close() {
+        this.backdrop.classList.remove('active');
+        currentVoteServerId = null;
+        currentVoteBtn = null;
+    },
+
+    async submit() {
+        const username = this.input.value.trim();
+        if (!username) {
+            showToast('Please enter a username', 'error');
+            return;
         }
-    } catch (err) {
-        btn.disabled = false;
-        showToast('Network error', 'error');
+        
+        // Save username for next time
+        localStorage.setItem('mc_username', username);
+
+        const serverId = currentVoteServerId;
+        const btn = currentVoteBtn;
+
+        this.close();
+
+        if (btn) {
+            btn.disabled = true;
+            btn.dataset.originalText = btn.textContent;
+            btn.textContent = '...';
+        }
+
+        try {
+            const res = await api.post(`/api/servers/${serverId}/vote`, { username: username });
+
+            if (res.success) {
+                if (btn) {
+                    // Fix: Use innerHTML to preserve icon
+                    btn.innerHTML = `<i class="fas fa-caret-up"></i> ${res.data.vote_count}`;
+                    btn.classList.add('voted');
+                }
+                
+                // Reward notification logic
+                let msg = 'Vote recorded!';
+                let type = 'success';
+                
+                if (res.data.reward_status === 'sent') {
+                    msg += ' Reward sent to server.';
+                } else if (res.data.reward_status === 'not_configured') {
+                    msg += ' (No reward configured by owner)';
+                    type = 'info';
+                } else if (res.data.reward_status === 'failed') {
+                    msg += ' but Reward delivery failed.';
+                    type = 'error'; // Partial success
+                }
+
+                showToast(msg, type);
+            } else {
+                if (btn) {
+                    btn.innerHTML = btn.dataset.originalText || '<i class="fas fa-caret-up"></i> Vote';
+                    btn.disabled = false;
+                }
+                showToast(res.error?.message || 'Vote failed', 'error');
+            }
+        } catch (err) {
+            if (btn) {
+                btn.innerHTML = btn.dataset.originalText || '<i class="fas fa-caret-up"></i> Vote';
+                btn.disabled = false;
+            }
+            showToast('Network error', 'error');
+        }
     }
+};
+
+// Initialize modal
+document.addEventListener('DOMContentLoaded', () => {
+    voteModal.init();
+});
+
+// Trigger function called by buttons
+function voteServer(serverId, btn) {
+    if (btn.classList.contains('voted') || btn.disabled) return;
+    voteModal.open(serverId, btn);
 }
 
 // ==========================================

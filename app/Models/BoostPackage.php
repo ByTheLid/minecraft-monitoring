@@ -8,6 +8,12 @@ class BoostPackage extends Model
 {
     protected static string $table = 'boost_packages';
 
+    // Helper to decode features
+    public function getFeatures(): array
+    {
+        return json_decode($this->features ?? '[]', true) ?: [];
+    }
+
     public static function getActive(): array
     {
         return static::db()->query(

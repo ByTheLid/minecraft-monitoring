@@ -81,5 +81,43 @@
                 </tbody>
             </table>
         </div>
+
+    <?php endif; ?>
+
+    <!-- Recent Votes -->
+    <h2 class="section-title mb-2 mt-4">Recent Votes (Received)</h2>
+    <?php if (empty($recentVotes)): ?>
+        <div class="card p-3 text-muted text-center" style="font-size:13px;">No votes received yet.</div>
+    <?php else: ?>
+        <div class="card overflow-auto">
+            <table class="table table-sm" style="font-size:13px;">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Voter</th>
+                        <th>Server</th>
+                        <th>Reward</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($recentVotes as $vote): ?>
+                        <tr>
+                            <td class="text-muted"><?= time_ago($vote['voted_at']) ?></td>
+                            <td><strong><?= e($vote['username']) ?></strong></td>
+                            <td><?= e($vote['server_name']) ?></td>
+                            <td>
+                                <?php if ($vote['reward_sent']): ?>
+                                    <span class="text-green"><i class="fas fa-check"></i> Sent</span>
+                                <?php elseif ($vote['reward_log']): ?>
+                                    <span class="text-red" title="<?= e($vote['reward_log']) ?>"><i class="fas fa-times"></i> Failed</span>
+                                <?php else: ?>
+                                    <span class="text-muted">–</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
     <?php endif; ?>
 </div>

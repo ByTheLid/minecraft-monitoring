@@ -94,8 +94,10 @@ class RefreshApiController extends Controller
         $phpBinary = PHP_BINARY ?: 'php';
 
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $cmd = '"' . $phpBinary . '" "' . $pingScript . '"';
-            pclose(popen('start /B ' . $cmd, 'r'));
+            // "start /B" treats the first quoted argument as the window title if there are spaces.
+            // So we provide a dummy title ""
+            $cmd = 'start "" /B "' . $phpBinary . '" "' . $pingScript . '"';
+            pclose(popen($cmd, 'r'));
         } else {
             $cmd = escapeshellarg($phpBinary) . ' ' . escapeshellarg($pingScript);
             exec($cmd . ' > /dev/null 2>&1 &');

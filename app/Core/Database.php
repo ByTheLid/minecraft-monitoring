@@ -12,7 +12,19 @@ class Database
     public static function getInstance(): PDO
     {
         if (self::$instance === null) {
-            $config = require dirname(__DIR__, 2) . '/config/database.php';
+            // Default path (when running via index.php)
+            $configPath = dirname(__DIR__, 2) . '/config/database.php';
+            
+            if (!file_exists($configPath)) {
+                // Fallback for CLI from root
+                $configPath = __DIR__ . '/../../config/database.php';
+            }
+            
+            if (!file_exists($configPath)) {
+                 $configPath = 'c:/laragon/www/minecraft-monitoring/config/database.php';
+            }
+
+            $config = require $configPath;
 
             $dsn = sprintf(
                 'mysql:host=%s;port=%d;dbname=%s;charset=%s',

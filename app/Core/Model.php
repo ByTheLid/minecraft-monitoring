@@ -15,72 +15,48 @@ abstract class Model
         return Database::getInstance();
     }
 
+    public static function builder(): QueryBuilder
+    {
+        return (new QueryBuilder(static::db()))->table(static::$table);
+    }
+
     public static function find(int $id): ?array
     {
-        $table = static::$table;
-        $pk = static::$primaryKey;
-        $stmt = static::db()->prepare("SELECT * FROM `{$table}` WHERE `{$pk}` = ? LIMIT 1");
-        $stmt->execute([$id]);
-        $result = $stmt->fetch();
-        return $result ?: null;
+        return static::builder()->where(static::$primaryKey, $id)->first();
     }
 
     public static function findBy(string $column, mixed $value): ?array
     {
-        $table = static::$table;
-        $stmt = static::db()->prepare("SELECT * FROM `{$table}` WHERE `{$column}` = ? LIMIT 1");
-        $stmt->execute([$value]);
-        $result = $stmt->fetch();
-        return $result ?: null;
+        return static::builder()->where($column, $value)->first();
     }
 
     public static function all(string $orderBy = 'id', string $direction = 'ASC', int $limit = 100, int $offset = 0): array
     {
-        $table = static::$table;
-        $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
-        $stmt = static::db()->prepare("SELECT * FROM `{$table}` ORDER BY `{$orderBy}` {$direction} LIMIT ? OFFSET ?");
-        $stmt->execute([$limit, $offset]);
-        return $stmt->fetchAll();
+        return static::builder()
+            ->orderBy($orderBy, $direction)
+            ->limit($limit)
+            ->offset($offset)
+            ->get();
     }
 
     public static function create(array $data): int
     {
-        $table = static::$table;
-        $columns = implode('`, `', array_keys($data));
-        $placeholders = implode(', ', array_fill(0, count($data), '?'));
-
-        $stmt = static::db()->prepare("INSERT INTO `{$table}` (`{$columns}`) VALUES ({$placeholders})");
-        $stmt->execute(array_values($data));
-
-        return (int) static::db()->lastInsertId();
+        return static::builder()->insert($data);
     }
 
     public static function update(int $id, array $data): bool
     {
-        $table = static::$table;
-        $pk = static::$primaryKey;
-        $sets = implode(', ', array_map(fn($col) => "`{$col}` = ?", array_keys($data)));
-
-        $stmt = static::db()->prepare("UPDATE `{$table}` SET {$sets} WHERE `{$pk}` = ?");
-        $values = array_values($data);
-        $values[] = $id;
-        return $stmt->execute($values);
+        return static::builder()->where(static::$primaryKey, $id)->update($data);
     }
 
     public static function delete(int $id): bool
     {
-        $table = static::$table;
-        $pk = static::$primaryKey;
-        $stmt = static::db()->prepare("DELETE FROM `{$table}` WHERE `{$pk}` = ?");
-        return $stmt->execute([$id]);
+        return static::builder()->where(static::$primaryKey, $id)->delete();
     }
 
     public static function count(string $where = '1=1', array $params = []): int
     {
-        $table = static::$table;
-        $stmt = static::db()->prepare("SELECT COUNT(*) FROM `{$table}` WHERE {$where}");
-        $stmt->execute($params);
-        return (int) $stmt->fetchColumn();
+        return static::builder()->whereRaw($where, $params)->count();
     }
 
     public static function query(string $sql, array $params = []): PDOStatement
@@ -92,20 +68,19 @@ abstract class Model
 
     public static function paginate(int $page = 1, int $perPage = 20, string $where = '1=1', array $params = [], string $orderBy = 'id', string $direction = 'DESC'): array
     {
-        $table = static::$table;
-        $direction = strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC';
         $offset = ($page - 1) * $perPage;
-
+        
         $total = static::count($where, $params);
-
-        $stmt = static::db()->prepare(
-            "SELECT * FROM `{$table}` WHERE {$where} ORDER BY `{$orderBy}` {$direction} LIMIT ? OFFSET ?"
-        );
-        $allParams = array_merge($params, [$perPage, $offset]);
-        $stmt->execute($allParams);
+        
+        $data = static::builder()
+            ->whereRaw($where, $params)
+            ->orderBy($orderBy, $direction)
+            ->limit($perPage)
+            ->offset($offset)
+            ->get();
 
         return [
-            'data' => $stmt->fetchAll(),
+            'data' => $data,
             'meta' => [
                 'page' => $page,
                 'per_page' => $perPage,
@@ -113,5 +88,10 @@ abstract class Model
                 'total_pages' => (int) ceil($total / $perPage),
             ],
         ];
+    }
+
+    public static function __callStatic($name, $arguments)
+    {
+        return static::builder()->$name(...$arguments);
     }
 }

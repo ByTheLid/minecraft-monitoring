@@ -71,10 +71,14 @@ class Migration
                     $stmt = $this->db->prepare("INSERT INTO migrations (name) VALUES (?)");
                     $stmt->execute([$name]);
 
-                    $this->db->commit();
+                    if ($this->db->inTransaction()) {
+                        $this->db->commit();
+                    }
                     $migrated[] = $name;
                 } catch (\Throwable $e) {
-                    $this->db->rollBack();
+                    if ($this->db->inTransaction()) {
+                        $this->db->rollBack();
+                    }
                     throw new \RuntimeException("Migration {$name} failed: " . $e->getMessage());
                 }
             }

@@ -40,7 +40,12 @@ class ServerStat extends Model
             $stmt->execute([$serverId]);
         } else {
             $stmt = static::db()->prepare(
-                "SELECT avg_players, max_players, uptime_percent, avg_ping, hour as checked_at
+                "SELECT 
+                    avg_players as players_online, 
+                    max_players as players_max, 
+                    uptime_percent, 
+                    avg_ping as ping_ms, 
+                    hour as checked_at
                  FROM server_stats_hourly
                  WHERE server_id = ? AND hour > DATE_SUB(NOW(), INTERVAL {$interval})
                  ORDER BY hour"

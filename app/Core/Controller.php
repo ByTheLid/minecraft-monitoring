@@ -73,43 +73,18 @@ abstract class Controller
 
     protected function validate(array $data, array $rules): array
     {
-        $errors = [];
-
-        foreach ($rules as $field => $ruleSet) {
-            $ruleList = is_string($ruleSet) ? explode('|', $ruleSet) : $ruleSet;
-            $value = $data[$field] ?? null;
-
-            foreach ($ruleList as $rule) {
-                $params = [];
-                if (str_contains($rule, ':')) {
-                    [$rule, $paramStr] = explode(':', $rule, 2);
-                    $params = explode(',', $paramStr);
-                }
-
-                $error = $this->checkRule($field, $value, $rule, $params);
-                if ($error) {
-                    $errors[$field] = $error;
-                    break; // stop on first error per field
-                }
-            }
+        $validator = new Validator();
+        $validator->validate($data, $rules);
+        
+        // Controller expects [field => error_message] (single error per field?)
+        // Controller logic was: return $errors where $errors[field] = single string.
+        // Validator stores array of errors per field.
+        
+        $flattenedErrors = [];
+        foreach ($validator->errors() as $field => $messages) {
+             $flattenedErrors[$field] = $messages[0];
         }
-
-        return $errors;
-    }
-
-    private function checkRule(string $field, mixed $value, string $rule, array $params): ?string
-    {
-        return match ($rule) {
-            'required' => ($value === null || $value === '') ? "{$field} is required" : null,
-            'email' => ($value && !filter_var($value, FILTER_VALIDATE_EMAIL)) ? "Invalid email" : null,
-            'min' => ($value && strlen($value) < (int)$params[0]) ? "{$field} must be at least {$params[0]} characters" : null,
-            'max' => ($value && strlen($value) > (int)$params[0]) ? "{$field} must not exceed {$params[0]} characters" : null,
-            'numeric' => ($value && !is_numeric($value)) ? "{$field} must be a number" : null,
-            'between' => ($value && ($value < (int)$params[0] || $value > (int)$params[1])) ? "{$field} must be between {$params[0]} and {$params[1]}" : null,
-            'regex' => ($value && !preg_match($params[0], $value)) ? "{$field} has invalid format" : null,
-            'url' => ($value && !filter_var($value, FILTER_VALIDATE_URL)) ? "Invalid URL" : null,
-            'ip' => ($value && !filter_var($value, FILTER_VALIDATE_IP) && !preg_match('/^[a-zA-Z0-9][a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/', $value)) ? "Invalid IP or domain" : null,
-            default => null,
-        };
+        
+        return $flattenedErrors;
     }
 }

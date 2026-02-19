@@ -36,11 +36,12 @@ class Vote extends Model
         return (int) $stmt->fetchColumn();
     }
 
-    public static function castVote(int $serverId, ?int $userId, string $ip): int
+    public static function castVote(int $serverId, ?int $userId, string $ip, ?string $username = null): int
     {
         return static::create([
             'server_id' => $serverId,
             'user_id' => $userId,
+            'username' => $username,
             'ip_address' => $ip,
         ]);
     }
@@ -64,6 +65,31 @@ class Vote extends Model
              ORDER BY date"
         );
         $stmt->execute([$serverId]);
+        return $stmt->fetchAll();
+    }
+    public static function getByUser(int $userId, int $limit = 10): array
+    {
+        $sql = "SELECT v.*, s.name as server_name, s.ip, s.port
+                FROM votes v
+                LEFT JOIN servers s ON v.server_id = s.id
+                WHERE v.user_id = ?
+                ORDER BY v.voted_at DESC
+                LIMIT ?";
+        $stmt = static::db()->prepare($sql);
+        $stmt->execute([$userId, $limit]);
+        return $stmt->fetchAll();
+    }
+
+    public static function getRecentForUserServers(int $userId, int $limit = 10): array
+    {
+        $sql = "SELECT v.*, s.name as server_name
+                FROM votes v
+                JOIN servers s ON v.server_id = s.id
+                WHERE s.user_id = ?
+                ORDER BY v.voted_at DESC
+                LIMIT ?";
+        $stmt = static::db()->prepare($sql);
+        $stmt->execute([$userId, $limit]);
         return $stmt->fetchAll();
     }
 }

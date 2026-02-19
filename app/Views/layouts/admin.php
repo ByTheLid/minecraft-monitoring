@@ -27,6 +27,7 @@
             <a href="/admin/servers?filter=pending" class="<?= ($adminPage ?? '') === 'servers' ? 'active' : '' ?>"><i class="fas fa-server"></i> Servers</a>
             <a href="/admin/users" class="<?= ($adminPage ?? '') === 'users' ? 'active' : '' ?>"><i class="fas fa-users"></i> Users</a>
             <a href="/admin/posts" class="<?= ($adminPage ?? '') === 'posts' ? 'active' : '' ?>"><i class="fas fa-newspaper"></i> Posts</a>
+            <a href="/admin/analytics" class="<?= ($adminPage ?? '') === 'analytics' ? 'active' : '' ?>"><i class="fas fa-chart-line"></i> Analytics</a>
             <a href="/admin/boost" class="<?= ($adminPage ?? '') === 'boost' ? 'active' : '' ?>"><i class="fas fa-rocket"></i> Boost</a>
             <a href="/admin/settings" class="<?= ($adminPage ?? '') === 'settings' ? 'active' : '' ?>"><i class="fas fa-cog"></i> Settings</a>
         </aside>

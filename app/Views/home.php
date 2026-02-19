@@ -101,7 +101,7 @@
     const COOLDOWN_MANUAL = 30;
 
     function renderServerCard(s, rank) {
-        const isOnline = s.is_online ? true : false;
+        const isOnline = (s.is_online == 1 || s.is_online === true || s.is_online === "1");
         const statusClass = isOnline ? 'status-online' : 'status-offline';
         const statusText = isOnline ? 'Online' : 'Offline';
         const players = (s.players_online || 0) + '/' + (s.players_max || 0);
