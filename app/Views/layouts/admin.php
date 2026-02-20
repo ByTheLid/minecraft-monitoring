@@ -3,9 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin — <?= e($pageTitle ?? 'Dashboard') ?></title>
+    <title>Admin — <?= e($pageTitle ?? 'Dashboard') ?> | <?= e(setting('site_name', 'MC Monitor')) ?></title>
+    <link rel="icon" href="<?= e(setting('asset_favicon', '/favicon.ico')) ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <?php 
+        $designPref = auth()['design_preference'] ?? 'modern';
+        $cssFile = $designPref === 'pixel' ? 'style-pixel.css' : 'style-modern.css';
+    ?>
+    <link rel="stylesheet" href="/css/<?= $cssFile ?>?v=<?= time() ?>">
 </head>
 <body>
     <nav class="navbar">
@@ -14,8 +19,11 @@
                 <span class="brand-icon"><i class="fas fa-cogs"></i></span>
                 <span>MC Admin</span>
             </a>
-            <div class="navbar-right">
+            <div class="navbar-right" style="display: flex; align-items: center; gap: 10px;">
                 <a href="/" class="btn btn-sm btn-secondary"><i class="fas fa-external-link-alt"></i> View Site</a>
+                <button class="theme-toggle" id="designToggle" title="Toggle Design Version (Modern/Pixel)" style="background: none; border: none; cursor: pointer; color: var(--text-color); font-size: 1.2rem;">
+                    <i class="fas <?= $designPref === 'pixel' ? 'fa-gamepad' : 'fa-paint-brush' ?>"></i>
+                </button>
                 <a href="/logout" class="btn btn-sm btn-danger"><i class="fas fa-sign-out-alt"></i> Exit</a>
             </div>
         </div>
@@ -53,5 +61,10 @@
     </div>
 
     <script src="/js/app.js"></script>
+    <?php if (isset($extraJs) && is_array($extraJs)): ?>
+        <?php foreach ($extraJs as $js): ?>
+            <script src="<?= $js ?>"></script>
+        <?php endforeach; ?>
+    <?php endif; ?>
 </body>
 </html>

@@ -10,6 +10,7 @@ use App\Controllers\Admin\UserController as AdminUserController;
 use App\Controllers\Admin\PostController as AdminPostController;
 use App\Controllers\Admin\BoostController as AdminBoostController;
 use App\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Controllers\DesignController;
 use App\Middleware\AuthMiddleware;
 use App\Middleware\AdminMiddleware;
 use App\Middleware\CsrfMiddleware;
@@ -21,6 +22,9 @@ $router->get('/server/{id}', [HomeController::class, 'serverDetail']);
 $router->get('/posts', [PostController::class, 'index']);
 $router->get('/post/{id}', [PostController::class, 'show']);
 $router->get('/user/{username}', [\App\Controllers\ProfileController::class, 'show']);
+
+// Utility routes
+$router->post('/design/toggle', [DesignController::class, 'toggle']);
 
 // Auth pages
 $router->get('/login', [AuthController::class, 'loginForm']);
@@ -38,6 +42,9 @@ $router->group('/dashboard', function ($router) {
     $router->post('/edit/{id}', [DashboardController::class, 'editServer']);
 
     $router->post('/delete/{id}', [DashboardController::class, 'deleteServer']);
+    $router->get('/server/{id}/boost', [\App\Controllers\User\BoostController::class, 'storeForm']);
+    $router->post('/server/{id}/boost/purchase', [\App\Controllers\User\BoostController::class, 'purchase']);
+    
     $router->get('/settings', [DashboardController::class, 'settings']);
     $router->post('/settings', [DashboardController::class, 'updateSettings']);
 }, [AuthMiddleware::class, CsrfMiddleware::class]);

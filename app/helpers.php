@@ -146,3 +146,25 @@ function logger(): App\Core\Logger
     }
     return $logger;
 }
+
+function setting(string $key, mixed $default = null): mixed
+{
+    static $settings = null;
+    
+    // Lazy load all settings once per request
+    if ($settings === null) {
+        $settings = [];
+        try {
+            if (class_exists(\App\Models\Setting::class)) {
+                $all = \App\Models\Setting::getAll();
+                foreach ($all as $s) {
+                    $settings[$s['key']] = $s['value'];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback if DB not ready
+        }
+    }
+    
+    return $settings[$key] ?? $default;
+}

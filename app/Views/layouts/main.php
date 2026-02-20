@@ -3,10 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="<?= e($metaDescription ?? 'Minecraft Server Monitoring Platform — Track, rate and discover the best Minecraft servers') ?>">
-    <title><?= e($pageTitle ?? 'MC Monitor') ?> — Minecraft Server Monitoring</title>
+    <meta name="description" content="<?= e($metaDescription ?? setting('site_description', 'Minecraft Server Monitoring Platform — Track, rate and discover the best Minecraft servers')) ?>">
+    <meta name="keywords" content="<?= e(setting('seo_keywords', 'minecraft, servers, monitoring, top')) ?>">
+    <title><?= e($pageTitle ?? setting('site_name', 'MC Monitor')) ?></title>
+    <link rel="icon" href="<?= e(setting('asset_favicon', '/favicon.ico')) ?>">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="/css/style.css">
+    <?php 
+        $designPref = 'modern';
+        if (auth() && isset(auth()['design_preference'])) {
+            $designPref = auth()['design_preference'];
+        } elseif (isset($_COOKIE['design_preference'])) {
+            $designPref = $_COOKIE['design_preference'];
+        }
+        $cssFile = $designPref === 'pixel' ? 'style-pixel.css' : 'style-modern.css';
+    ?>
+    <link rel="stylesheet" href="/css/<?= $cssFile ?>?v=<?= time() ?>">
     <?php if (!empty($extraCss)): ?>
         <?php foreach ($extraCss as $css): ?>
             <link rel="stylesheet" href="<?= $css ?>">
@@ -18,8 +29,12 @@
     <nav class="navbar">
         <div class="container">
             <a href="/" class="navbar-brand">
-                <span class="brand-icon"><i class="fas fa-cubes"></i></span>
-                <span>MC Monitor</span>
+                <?php if ($logo = setting('asset_logo', '')): ?>
+                    <img src="<?= e($logo) ?>" alt="<?= e(setting('site_name', 'MC Monitor')) ?>" style="max-height: 32px; width: auto; max-width: 150px; object-fit: contain;">
+                <?php else: ?>
+                    <span class="brand-icon"><i class="fas fa-cubes"></i></span>
+                    <span><?= e(setting('site_name', 'MC Monitor')) ?></span>
+                <?php endif; ?>
             </a>
 
             <button class="nav-mobile-toggle" id="navToggle"><i class="fas fa-bars"></i></button>
@@ -31,15 +46,18 @@
             </ul>
 
             <div class="navbar-right">
+                <button class="theme-toggle" id="designToggle" title="Toggle Design Version (Modern/Pixel)">
+                    <i class="fas <?= $designPref === 'pixel' ? 'fa-gamepad' : 'fa-paint-brush' ?>"></i>
+                </button>
                 <button class="theme-toggle" id="themeToggle" title="Toggle theme"><i class="fas fa-moon"></i></button>
                 <?php if (auth()): ?>
                     <a href="/dashboard" class="btn btn-sm btn-secondary">
-                        <?= e(auth()['username']) ?>
+                        <i class="fas fa-user"></i> <?= e(auth()['username']) ?>
                     </a>
                     <?php if (is_admin()): ?>
-                        <a href="/admin" class="btn btn-sm btn-gold">Admin</a>
+                        <a href="/admin" class="btn btn-sm btn-gold"><i class="fas fa-cogs"></i> Admin</a>
                     <?php endif; ?>
-                    <a href="/logout" class="btn btn-sm btn-danger">Exit</a>
+                    <a href="/logout" class="btn btn-sm btn-danger"><i class="fas fa-sign-out-alt"></i> Exit</a>
                 <?php else: ?>
                     <a href="/login" class="btn btn-sm btn-secondary">Login</a>
                     <a href="/register" class="btn btn-sm btn-primary">Register</a>
@@ -93,7 +111,24 @@
                 <span style="opacity:0.3;">&middot;</span>
                 <a href="/register" style="color:var(--text-muted);">Add Server</a>
             </div>
-            <p>&copy; <?= date('Y') ?> MC Monitor</p>
+            <p>&copy; <?= date('Y') ?> <?= e(setting('site_name', 'MC Monitor')) ?></p>
+            
+            <?php 
+                $socials = [
+                    'discord' => ['icon' => 'fa-discord', 'url' => setting('social_discord')],
+                    'telegram' => ['icon' => 'fa-telegram', 'url' => setting('social_telegram')],
+                    'vk' => ['icon' => 'fa-vk', 'url' => setting('social_vk')]
+                ];
+            ?>
+            <div class="flex-center gap-2 mt-1">
+                <?php foreach ($socials as $id => $data): ?>
+                    <?php if (!empty($data['url'])): ?>
+                        <a href="<?= e($data['url']) ?>" target="_blank" rel="noopener noreferrer" style="color:var(--text-muted); font-size:18px; transition: color 0.3s;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-muted)'">
+                            <i class="fab <?= $data['icon'] ?>"></i>
+                        </a>
+                    <?php endif; ?>
+                <?php endforeach; ?>
+            </div>
         </div>
     </footer>
 

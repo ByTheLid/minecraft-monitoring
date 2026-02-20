@@ -28,7 +28,14 @@
             <?php foreach ($servers as $server): ?>
                 <tr>
                     <td><?= $server['id'] ?></td>
-                    <td><strong><?= e($server['name']) ?></strong></td>
+                    <td>
+                        <strong><?= e($server['name']) ?></strong>
+                        <?php if (!empty($server['active_boosts'])): ?>
+                            <div class="text-gold" style="font-size:11px; margin-top:2px;">
+                                <i class="fas fa-bolt"></i> <?= e($server['active_boosts']) ?>
+                            </div>
+                        <?php endif; ?>
+                    </td>
                     <td class="text-muted"><?= e($server['ip']) ?>:<?= $server['port'] ?></td>
                     <td><?= e($server['owner_name'] ?? '—') ?></td>
                     <td>
@@ -48,7 +55,12 @@
                         <?php endif; ?>
                     </td>
                     <td>
-                        <div class="flex gap-1">
+                        <div class="flex gap-1" style="align-items:center;">
+                            <!-- Votes -->
+                            <span class="badge badge-secondary" style="font-size:11px; margin-right:5px;" title="Votes">
+                                <i class="fas fa-caret-up"></i> <?= (int)($server['vote_count'] ?? 0) ?>
+                            </span>
+
                             <!-- Analytics -->
                             <a href="/admin/analytics?search=<?= urlencode($server['name']) ?>" class="btn btn-sm btn-secondary" title="Analytics">
                                 <i class="fas fa-chart-line"></i>

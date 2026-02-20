@@ -127,6 +127,33 @@
                 </label>
             </div>
 
+            <div class="grid-2 gap-2 mt-1">
+                <div class="form-group">
+                    <label>Highlight Type</label>
+                    <div class="flex gap-2 mt-1">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" name="has_border" value="1">
+                            <span class="checkmark"></span>
+                            Colored Border
+                        </label>
+                        <label class="custom-checkbox">
+                            <input type="checkbox" name="has_bg_color" value="1">
+                            <span class="checkmark"></span>
+                            Colored Background
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Stars (0-3)</label>
+                    <select name="stars" class="form-control">
+                        <option value="0">0 Stars</option>
+                        <option value="1">1 Star</option>
+                        <option value="2">2 Stars</option>
+                        <option value="3">3 Stars</option>
+                    </select>
+                </div>
+            </div>
+
             <button type="submit" class="btn btn-primary mt-2">Create Package</button>
         </form>
     </div>
@@ -176,7 +203,34 @@
                     <option value="1">Yes</option>
                 </select>
             </div>
-            <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+            <div class="flex gap-1">
+                <div class="form-group" style="flex:1;">
+                    <label>Stars</label>
+                    <select name="stars" id="edit_stars" class="form-control">
+                        <option value="0">0</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+                <div class="form-group" style="flex:2;">
+                    <label>Highlight Type</label>
+                    <div class="flex gap-2 mt-1">
+                        <label class="custom-checkbox">
+                            <input type="checkbox" name="has_border" id="edit_border" value="1">
+                            <span class="checkmark"></span>
+                            Border
+                        </label>
+                        <label class="custom-checkbox">
+                            <input type="checkbox" name="has_bg_color" id="edit_bg" value="1">
+                            <span class="checkmark"></span>
+                            Background
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block mt-2">Save Changes</button>
         </form>
     </div>
 </div>
@@ -210,6 +264,11 @@ function openEditModal(pkg) {
     document.getElementById('edit_color').value = pkg.color;
     document.getElementById('edit_features').value = pkg.features;
     document.getElementById('edit_popular').value = pkg.is_popular;
+    
+    document.getElementById('edit_stars').value = pkg.stars;
+    document.getElementById('edit_border').checked = pkg.has_border == 1;
+    document.getElementById('edit_bg').checked = pkg.has_bg_color == 1;
+
     document.getElementById('editModal').style.display = 'flex';
 }
 function closeEditModal() {

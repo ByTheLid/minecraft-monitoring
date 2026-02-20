@@ -26,6 +26,9 @@ class BoostController extends Controller
             'color' => sanitize($request->input('color', '#ffcc00')),
             'features' => $request->input('features', '[]'),
             'is_popular' => (int) $request->input('is_popular', 0),
+            'stars' => (int) $request->input('stars', 0),
+            'has_border' => (int) $request->input('has_border', 0),
+            'has_bg_color' => (int) $request->input('has_bg_color', 0),
         ]);
 
         flash('success', 'Boost package created.');
@@ -43,6 +46,9 @@ class BoostController extends Controller
             'color' => sanitize($request->input('color', '#ffcc00')),
             'features' => $request->input('features', '[]'),
             'is_popular' => (int) $request->input('is_popular', 0),
+            'stars' => (int) $request->input('stars', 0),
+            'has_border' => (int) $request->input('has_border', 0),
+            'has_bg_color' => (int) $request->input('has_bg_color', 0),
         ]);
 
         flash('success', 'Boost package updated.');

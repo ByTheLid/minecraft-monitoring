@@ -31,8 +31,13 @@
                 <p class="text-muted">No servers yet. Be the first to <a href="/register">add yours</a>!</p>
             </div>
         <?php else: ?>
-            <?php foreach ($servers as $i => $server): ?>
-                <div class="server-card">
+            <?php foreach ($servers as $i => $server): 
+                    
+                    $bgColor = ($server['has_bg_color'] && $server['highlight_color']) ? 'background: linear-gradient(135deg, '.e($server['highlight_color']).'22 0%, var(--bg-card) 100%);' : '';
+                    $borderColor = ($server['has_border'] && $server['highlight_color']) ? 'border: 1px solid '.e($server['highlight_color']).'; box-shadow: 0 0 15px '.e($server['highlight_color']).'33;' : '';
+                    $cardStyle = trim("$bgColor $borderColor");
+            ?>
+                <div class="server-card" style="<?= $cardStyle ?>">
                     <div class="server-icon">
                         <?php if (!empty($server['favicon_base64'])): ?>
                             <img src="<?= e($server['favicon_base64']) ?>" alt="">
@@ -44,6 +49,14 @@
                         <h3>
                             <span class="server-rank">#<?= $i + 1 ?></span>
                             <a href="/server/<?= $server['id'] ?>"><?= e($server['name']) ?></a>
+                            
+                            <?php if (!empty($server['stars']) && (int)$server['stars'] > 0): ?>
+                                <span class="server-stars text-gold" style="font-size: 14px; margin-left: 5px;">
+                                    <?php for($star = 0; $star < min(3, (int)$server['stars']); $star++): ?>
+                                        <i class="fas fa-star"></i>
+                                    <?php endfor; ?>
+                                </span>
+                            <?php endif; ?>
                         </h3>
                         <div class="server-meta">
                             <?php if ($server['is_online'] ?? false): ?>
@@ -112,11 +125,32 @@
             : '<i class="fas fa-cube"></i>';
         const version = s.version ? '<span><i class="fas fa-code-branch"></i> ' + escapeHtml(s.version) + '</span>' : '';
         const votes = s.vote_count || 0;
+        
+        let cardStyle = '';
+        if (s.highlight_color) {
+            let styles = [];
+            if (s.has_bg_color == 1 || s.has_bg_color === true) styles.push('background: linear-gradient(135deg, ' + escapeHtml(s.highlight_color) + '22 0%, var(--bg-card) 100%)');
+            if (s.has_border == 1 || s.has_border === true) {
+                styles.push('border: 1px solid ' + escapeHtml(s.highlight_color));
+                styles.push('box-shadow: 0 0 15px ' + escapeHtml(s.highlight_color) + '33');
+            }
+            if (styles.length) cardStyle = ' style="' + styles.join('; ') + ';"';
+        }
 
-        return '<div class="server-card">' +
+        let starsHtml = '';
+        const starCount = parseInt(s.stars) || 0;
+        if (starCount > 0) {
+            starsHtml = ' <span class="server-stars text-gold" style="font-size: 14px; margin-left: 5px;">';
+            for (let i = 0; i < Math.min(3, starCount); i++) {
+                starsHtml += '<i class="fas fa-star"></i>';
+            }
+            starsHtml += '</span>';
+        }
+
+        return '<div class="server-card"' + cardStyle + '>' +
             '<div class="server-icon">' + icon + '</div>' +
             '<div class="server-info">' +
-                '<h3><span class="server-rank">#' + rank + '</span> <a href="/server/' + s.id + '">' + escapeHtml(s.name) + '</a></h3>' +
+                '<h3><span class="server-rank">#' + rank + '</span> <a href="/server/' + s.id + '">' + escapeHtml(s.name) + '</a>' + starsHtml + '</h3>' +
                 '<div class="server-meta">' +
                     '<span class="status-badge ' + statusClass + '"><span class="status-dot"></span> ' + statusText + '</span>' +
                     '<span><i class="fas fa-users"></i> ' + players + '</span>' +

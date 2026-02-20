@@ -1,4 +1,9 @@
-<?php $layout = 'admin'; $adminPage = 'dashboard'; $pageTitle = 'Admin Dashboard'; ?>
+<?php 
+$layout = 'admin'; 
+$adminPage = 'dashboard'; 
+$pageTitle = 'Admin Dashboard'; 
+$extraJs = ['https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js', '/js/admin-charts.js'];
+?>
 
 <div class="grid-4 mb-3">
     <div class="card">
@@ -16,6 +21,29 @@
     <div class="card">
         <div class="text-muted" style="font-size:12px; text-transform:uppercase;">Active Boosts</div>
         <div style="font-size:24px; font-weight:bold; color:var(--accent-gold);"><?= $stats['boosts_active'] ?></div>
+    </div>
+</div>
+
+<?php if (isset($pendingServers) && $pendingServers > 0): ?>
+    <div class="alert alert-info mb-3">
+        <i class="fas fa-exclamation-circle"></i>
+        <strong><?= $pendingServers ?></strong> server(s) waiting for approval.
+        <a href="/admin/servers?filter=pending">Review now <i class="fas fa-arrow-right"></i></a>
+    </div>
+<?php endif; ?>
+
+<div class="grid-2 mb-3">
+    <div class="chart-container">
+        <h3>Registrations (7 days)</h3>
+        <div class="chart-wrapper">
+            <canvas id="registrationsChart"></canvas>
+        </div>
+    </div>
+    <div class="chart-container">
+        <h3>Votes (7 days)</h3>
+        <div class="chart-wrapper">
+            <canvas id="votesChart"></canvas>
+        </div>
     </div>
 </div>
 
@@ -68,4 +96,11 @@
             </div>
         </div>
     </div>
+</div>
+
+<div class="chart-container mb-3" style="margin-top:20px;">
+    <h3>Recent Activity</h3>
+    <ul class="activity-feed" id="activityFeed">
+        <li class="text-muted">Loading...</li>
+    </ul>
 </div>

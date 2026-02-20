@@ -69,11 +69,12 @@
                                 <?= $server['is_approved'] ? '<span class="text-green">Yes</span>' : '<span class="text-muted">Pending</span>' ?>
                             </td>
                             <td>
-                                <a href="/dashboard/edit/<?= $server['id'] ?>" class="btn btn-sm btn-secondary">Edit</a>
+                                <a href="/dashboard/server/<?= $server['id'] ?>/boost" class="btn btn-sm btn-gold text-dark mb-1" style="display:inline-block;"><i class="fas fa-bolt"></i> Boost</a>
+                                <a href="/dashboard/edit/<?= $server['id'] ?>" class="btn btn-sm btn-secondary mb-1">Edit</a>
                                 <form method="POST" action="/dashboard/delete/<?= $server['id'] ?>" style="display:inline;"
                                       onsubmit="return confirm('Are you sure?')">
                                     <?= csrf_field() ?>
-                                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                                    <button type="submit" class="btn btn-sm btn-danger mb-1">Delete</button>
                                 </form>
                             </td>
                         </tr>

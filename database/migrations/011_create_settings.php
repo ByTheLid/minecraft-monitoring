@@ -17,6 +17,14 @@ return [
         $stmt->execute(['rank_ko', '0.3', 'Online coefficient']);
         $stmt->execute(['rank_ku', '0.2', 'Uptime coefficient']);
         $stmt->execute(['max_servers_per_user', '5', 'Maximum servers per user']);
+        $stmt->execute(['site_name', 'MC Monitor', 'Project name']);
+        $stmt->execute(['site_description', 'Best Minecraft servers monitoring.', 'SEO text']);
+        $stmt->execute(['seo_keywords', 'minecraft, servers, monitoring, top', 'SEO words']);
+        $stmt->execute(['social_discord', '', 'Discord Invtie URL']);
+        $stmt->execute(['social_vk', '', 'VK Community URL']);
+        $stmt->execute(['social_telegram', '', 'Telegram Channel URL']);
+        $stmt->execute(['asset_logo', '/img/logo.png', 'Logo URL']);
+        $stmt->execute(['asset_favicon', '/favicon.ico', 'Favicon URL']);
     },
     'down' => "DROP TABLE IF EXISTS settings",
 ];

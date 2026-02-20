@@ -21,6 +21,30 @@
             toggle.innerHTML = next === 'dark' ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
         });
     }
+
+    // Design Version Toggle (Modern vs Pixel)
+    const designToggle = document.getElementById('designToggle');
+    if (designToggle) {
+        designToggle.addEventListener('click', async () => {
+            designToggle.disabled = true;
+            // Determine current from icon
+            const isPixel = designToggle.querySelector('i').classList.contains('fa-gamepad');
+            const nextDesign = isPixel ? 'modern' : 'pixel';
+            
+            try {
+                const res = await api.post('/design/toggle', { design: nextDesign });
+                if (res.success) {
+                    window.location.reload();
+                } else {
+                    showToast('Failed to switch design', 'error');
+                    designToggle.disabled = false;
+                }
+            } catch (err) {
+                showToast('Network error', 'error');
+                designToggle.disabled = false;
+            }
+        });
+    }
 })();
 
 // ==========================================

@@ -27,10 +27,33 @@ try {
         $stmt->execute([$sid]);
         $votes = (int) $stmt->fetchColumn();
 
-        // Active boost points
-        $stmt = $db->prepare("SELECT COALESCE(SUM(points), 0) FROM boost_purchases WHERE server_id = ? AND expires_at > NOW()");
+        // Active boost points and perks
+        $stmt = $db->prepare("
+            SELECT 
+                COALESCE(SUM(bp.points), 0) as total_points,
+                MAX(pkg.stars) as max_stars,
+                MAX(pkg.has_border) as max_border,
+                MAX(pkg.has_bg_color) as max_bg,
+                MAX(pkg.color) as highlight_color
+            FROM boost_purchases bp
+            JOIN boost_packages pkg ON bp.package_id = pkg.id
+            WHERE bp.server_id = ? AND bp.expires_at > NOW()
+        ");
         $stmt->execute([$sid]);
-        $boostPoints = (int) $stmt->fetchColumn();
+        $boostData = $stmt->fetch();
+        
+        $boostPoints = (int) ($boostData['total_points'] ?? 0);
+        $stars = (int) ($boostData['max_stars'] ?? 0);
+        $hasBorder = (int) ($boostData['max_border'] ?? 0);
+        $hasBgColor = (int) ($boostData['max_bg'] ?? 0);
+        $highlightColor = $boostData['highlight_color'] ?? null;
+
+        // Custom boosts might not have a package_id, so we still need their points
+        $stmtCustom = $db->prepare("SELECT COALESCE(SUM(points), 0) FROM boost_purchases WHERE server_id = ? AND package_id IS NULL AND expires_at > NOW()");
+        $stmtCustom->execute([$sid]);
+        $customBoostPoints = (int) $stmtCustom->fetchColumn();
+        
+        $boostPoints += $customBoostPoints;
 
         // Average online last 7 days (normalized 0-100)
         $stmt = $db->prepare(
@@ -61,17 +84,32 @@ try {
 
         // Upsert ranking
         $stmt = $db->prepare(
-            "INSERT INTO server_rankings (server_id, rank_score, vote_count, boost_points, avg_online, uptime_percent, calculated_at)
-             VALUES (?, ?, ?, ?, ?, ?, NOW())
+            "INSERT INTO server_rankings (server_id, rank_score, vote_count, boost_points, avg_online, uptime_percent, calculated_at, stars, has_border, has_bg_color, highlight_color)
+             VALUES (?, ?, ?, ?, ?, ?, NOW(), ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                 rank_score = VALUES(rank_score),
                 vote_count = VALUES(vote_count),
                 boost_points = VALUES(boost_points),
                 avg_online = VALUES(avg_online),
                 uptime_percent = VALUES(uptime_percent),
+                stars = VALUES(stars),
+                has_border = VALUES(has_border),
+                has_bg_color = VALUES(has_bg_color),
+                highlight_color = VALUES(highlight_color),
                 calculated_at = NOW()"
         );
-        $stmt->execute([$sid, round($score, 4), $votes, $boostPoints, round($normalizedOnline, 2), round($uptime, 2)]);
+        $stmt->execute([
+            $sid, 
+            round($score, 4), 
+            $votes, 
+            $boostPoints, 
+            round($normalizedOnline, 2), 
+            round($uptime, 2),
+            $stars,
+            $hasBorder,
+            $hasBgColor,
+            $highlightColor
+        ]);
 
         $count++;
     }

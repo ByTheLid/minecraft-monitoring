@@ -32,6 +32,7 @@
             <div class="settings-tab active" data-tab="general">General</div>
             <div class="settings-tab" data-tab="economics">Economics & SEO</div>
             <div class="settings-tab" data-tab="socials">Socials & Contacts</div>
+            <div class="settings-tab" data-tab="assets">Assets</div>
         </div>
 
         <!-- General Tab -->
@@ -110,6 +111,23 @@
                 <div class="form-group mb-2">
                     <label>Telegram Channel</label>
                     <input type="url" name="social_telegram" class="form-control" value="<?= e($vals['social_telegram'] ?? '') ?>" placeholder="https://t.me/...">
+                </div>
+            </div>
+        </div>
+
+        <!-- Assets Tab -->
+        <div id="assets" class="settings-content">
+            <div class="form-section">
+                <h3 class="section-title mb-2">Platform Assets</h3>
+                <div class="form-group mb-2">
+                    <label>Logo URL</label>
+                    <input type="text" name="asset_logo" class="form-control" value="<?= e($vals['asset_logo'] ?? '/img/logo.png') ?>" placeholder="/img/logo.png or https://...">
+                    <div class="form-text">Path to the logo displayed in the navbar.</div>
+                </div>
+                <div class="form-group mb-2">
+                    <label>Favicon URL</label>
+                    <input type="text" name="asset_favicon" class="form-control" value="<?= e($vals['asset_favicon'] ?? '/favicon.ico') ?>" placeholder="/favicon.ico">
+                    <div class="form-text">Path to the website favicon.</div>
                 </div>
             </div>
         </div>

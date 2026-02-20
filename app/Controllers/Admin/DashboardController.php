@@ -20,6 +20,8 @@ class DashboardController extends Controller
             'boosts_active' => (int) ($db->query("SELECT COUNT(*) FROM boost_purchases WHERE expires_at > NOW()")->fetchColumn() ?: 0),
         ];
 
+        $pendingServers = (int) $db->query("SELECT COUNT(*) FROM servers WHERE is_approved = 0 AND is_active = 1")->fetchColumn();
+
         $recentServers = $db->query("SELECT name, created_at FROM servers ORDER BY created_at DESC LIMIT 5")->fetchAll();
         $topServers = $db->query("
             SELECT s.name, COUNT(v.id) as vote_count 
@@ -38,6 +40,7 @@ class DashboardController extends Controller
 
         return $this->view('admin.index', [
             'stats' => $stats,
+            'pendingServers' => $pendingServers,
             'recentServers' => $recentServers,
             'topServers' => $topServers,
             'health' => $health

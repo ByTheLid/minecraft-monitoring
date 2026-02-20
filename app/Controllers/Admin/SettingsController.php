@@ -21,7 +21,8 @@ class SettingsController extends Controller
             'rank_kv', 'rank_kb', 'rank_ko', 'rank_ku', 
             'max_servers_per_user',
             'site_name', 'site_description', 'seo_keywords',
-            'social_discord', 'social_vk', 'social_telegram'
+            'social_discord', 'social_vk', 'social_telegram',
+            'asset_logo', 'asset_favicon'
         ];
         
         foreach ($keys as $key) {
