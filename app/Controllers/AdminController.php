@@ -22,25 +22,31 @@ class AdminController extends Controller
         $pendingServers = (int) $db->query("SELECT COUNT(*) FROM servers WHERE is_approved = 0 AND is_active = 1")->fetchColumn();
         $totalUsers = (int) $db->query("SELECT COUNT(*) FROM users")->fetchColumn();
         $todayVotes = (int) $db->query("SELECT COUNT(*) FROM votes WHERE voted_at > CURDATE()")->fetchColumn();
+        $totalPosts = (int) $db->query("SELECT COUNT(*) FROM posts")->fetchColumn();
+        $onlineServers = (int) $db->query("SELECT COUNT(*) FROM server_status_cache WHERE is_online = 1")->fetchColumn();
 
         return $this->view('admin.index', [
             'totalServers' => $totalServers,
             'pendingServers' => $pendingServers,
             'totalUsers' => $totalUsers,
             'todayVotes' => $todayVotes,
+            'totalPosts' => $totalPosts,
+            'onlineServers' => $onlineServers,
         ]);
     }
 
     public function servers(Request $request): Response
     {
         $filter = $request->query('filter', 'all');
+        $search = sanitize($request->query('search', ''));
         $page = max(1, (int) $request->query('page', 1));
-        $result = Server::getAllForAdmin($page, 20, $filter);
+        $result = Server::getAllForAdmin($page, 20, $filter, $search);
 
         return $this->view('admin.servers', [
             'servers' => $result['data'],
             'meta' => $result['meta'],
             'filter' => $filter,
+            'search' => $search,
         ]);
     }
 
@@ -56,18 +62,113 @@ class AdminController extends Controller
     {
         $id = (int) $request->param('id');
         Server::update($id, ['is_active' => 0]);
-        flash('success', 'Server rejected.');
-        return $this->redirect('/admin/servers?filter=pending');
+        flash('success', 'Server blocked.');
+        return $this->redirect('/admin/servers');
+    }
+
+    public function unblockServer(Request $request): Response
+    {
+        $id = (int) $request->param('id');
+        Server::update($id, ['is_active' => 1, 'is_approved' => 1]);
+        flash('success', 'Server unblocked.');
+        return $this->redirect('/admin/servers');
+    }
+
+    public function resetVotes(Request $request): Response
+    {
+        $id = (int) $request->param('id');
+        $db = Database::getInstance();
+        $db->prepare("DELETE FROM votes WHERE server_id = ?")->execute([$id]);
+        $db->prepare("UPDATE server_rankings SET vote_count = 0 WHERE server_id = ?")->execute([$id]);
+        flash('success', 'Votes reset to 0.');
+        return $this->redirect("/admin/servers/{$id}");
+    }
+
+    public function resetBoosts(Request $request): Response
+    {
+        $id = (int) $request->param('id');
+        $db = Database::getInstance();
+        $db->prepare("DELETE FROM boost_purchases WHERE server_id = ?")->execute([$id]);
+        $db->prepare("UPDATE server_rankings SET boost_points = 0 WHERE server_id = ?")->execute([$id]);
+        flash('success', 'Boosts reset.');
+        return $this->redirect("/admin/servers/{$id}");
+    }
+
+    public function serverDetail(Request $request): Response
+    {
+        $id = (int) $request->param('id');
+        $server = Server::getDetail($id);
+
+        if (!$server) {
+            flash('error', 'Server not found.');
+            return $this->redirect('/admin/servers');
+        }
+
+        $db = Database::getInstance();
+        $stmt = $db->prepare("SELECT COUNT(*) FROM votes WHERE server_id = ?");
+        $stmt->execute([$id]);
+        $totalVotes = (int) $stmt->fetchColumn();
+
+        $stmt = $db->prepare(
+            "SELECT bp.*, bp2.name as package_name FROM boost_purchases bp
+             LEFT JOIN boost_packages bp2 ON bp.package_id = bp2.id
+             WHERE bp.server_id = ? AND bp.expires_at > NOW()
+             ORDER BY bp.expires_at DESC"
+        );
+        $stmt->execute([$id]);
+        $activeBoosts = $stmt->fetchAll();
+
+        return $this->view('admin.server-detail', [
+            'server' => $server,
+            'totalVotes' => $totalVotes,
+            'activeBoosts' => $activeBoosts,
+        ]);
+    }
+
+    public function editServer(Request $request): Response
+    {
+        $id = (int) $request->param('id');
+
+        Server::update($id, [
+            'name' => sanitize($request->input('name', '')),
+            'description' => $request->input('description', ''),
+            'website' => sanitize($request->input('website', '')),
+            'is_approved' => $request->input('is_approved') ? 1 : 0,
+            'is_active' => $request->input('is_active') ? 1 : 0,
+        ]);
+
+        flash('success', 'Server updated.');
+        return $this->redirect("/admin/servers/{$id}");
     }
 
     public function users(Request $request): Response
     {
         $page = max(1, (int) $request->query('page', 1));
-        $result = User::paginate($page, 20);
+        $search = sanitize($request->query('search', ''));
+
+        if ($search) {
+            $result = User::paginate($page, 20, "username LIKE ? OR email LIKE ?", ["%{$search}%", "%{$search}%"]);
+        } else {
+            $result = User::paginate($page, 20);
+        }
+
+        $db = Database::getInstance();
+        $userIds = array_column($result['data'], 'id');
+        $serverCounts = [];
+        if ($userIds) {
+            $placeholders = implode(',', array_fill(0, count($userIds), '?'));
+            $stmt = $db->prepare("SELECT user_id, COUNT(*) as cnt FROM servers WHERE user_id IN ({$placeholders}) GROUP BY user_id");
+            $stmt->execute($userIds);
+            foreach ($stmt->fetchAll() as $row) {
+                $serverCounts[$row['user_id']] = (int) $row['cnt'];
+            }
+        }
 
         return $this->view('admin.users', [
             'users' => $result['data'],
             'meta' => $result['meta'],
+            'search' => $search,
+            'serverCounts' => $serverCounts,
         ]);
     }
 
@@ -79,6 +180,22 @@ class AdminController extends Controller
         if ($user) {
             User::update($id, ['is_active' => $user['is_active'] ? 0 : 1]);
             flash('success', 'User status updated.');
+        }
+
+        return $this->redirect('/admin/users');
+    }
+
+    public function changeRole(Request $request): Response
+    {
+        $id = (int) $request->param('id');
+        $user = User::find($id);
+
+        if ($user && $user['id'] !== auth()['id']) {
+            $newRole = $user['role'] === 'admin' ? 'user' : 'admin';
+            User::update($id, ['role' => $newRole]);
+            flash('success', "User role changed to {$newRole}.");
+        } elseif ($user && $user['id'] === auth()['id']) {
+            flash('error', 'You cannot change your own role.');
         }
 
         return $this->redirect('/admin/users');

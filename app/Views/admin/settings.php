@@ -1,12 +1,12 @@
 <?php $layout = 'admin'; $adminPage = 'settings'; $pageTitle = 'Settings'; ?>
 
-<h1 style="font-size:16px;" class="mb-2">Platform Settings</h1>
+<h1 class="page-title mb-2">Platform Settings</h1>
 
 <div class="card" style="max-width:500px;">
     <form method="POST" action="/admin/settings">
         <?= csrf_field() ?>
 
-        <h3 class="mb-2" style="font-size:13px; color:var(--accent-blue);">Ranking Coefficients</h3>
+        <h3 class="section-title mb-2"><i class="fas fa-trophy" style="color:var(--blue);"></i> Ranking Coefficients</h3>
 
         <?php
             $vals = [];
@@ -38,7 +38,7 @@
             </div>
         </div>
 
-        <h3 class="mb-2 mt-2" style="font-size:13px; color:var(--accent-blue);">Limits</h3>
+        <h3 class="section-title mb-2 mt-2"><i class="fas fa-sliders-h" style="color:var(--gold);"></i> Limits</h3>
 
         <div class="form-group">
             <label>Max servers per user</label>

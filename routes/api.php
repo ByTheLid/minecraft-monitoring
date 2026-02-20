@@ -31,6 +31,7 @@ $router->group('/api', function ($router) {
 
     // Admin API
     $router->group('/admin', function ($router) {
+        $router->get('/dashboard-stats', [AdminApiController::class, 'dashboardStats']);
         $router->get('/servers', [AdminApiController::class, 'servers']);
         $router->put('/servers/{id}/approve', [AdminApiController::class, 'approve']);
         $router->put('/settings', [AdminApiController::class, 'updateSettings']);

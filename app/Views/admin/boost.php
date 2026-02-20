@@ -1,60 +1,61 @@
 <?php $layout = 'admin'; $adminPage = 'boost'; $pageTitle = 'Boost Packages'; ?>
 
-<div class="flex-between mb-2">
-    <h1 style="font-size:16px;">Boost Packages</h1>
-</div>
+<h1 class="page-title mb-2">Boost Packages</h1>
 
-<!-- Existing packages -->
-<div class="table-responsive mb-3">
-    <table class="table">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Points</th>
-                <th>Price</th>
-                <th>Duration</th>
-                <th>Status</th>
-                <th>Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($packages as $pkg): ?>
-                <tr>
-                    <td><?= $pkg['id'] ?></td>
-                    <td>
-                        <form method="POST" action="/admin/boost/edit/<?= $pkg['id'] ?>" class="flex gap-1" style="align-items:center;">
-                            <?= csrf_field() ?>
-                            <input type="text" name="name" value="<?= e($pkg['name']) ?>" class="form-control" style="width:120px;">
-                            <input type="number" name="points" value="<?= $pkg['points'] ?>" class="form-control" style="width:80px;">
-                            <input type="number" step="0.01" name="price" value="<?= $pkg['price'] ?>" class="form-control" style="width:80px;">
-                            <input type="number" name="duration_days" value="<?= $pkg['duration_days'] ?>" class="form-control" style="width:80px;">
-                            <button type="submit" class="btn btn-sm btn-secondary">Save</button>
-                        </form>
-                    </td>
-                    <td></td><td></td><td></td>
-                    <td><?= $pkg['is_active'] ? '<span class="text-green">Active</span>' : '<span class="text-red">Inactive</span>' ?></td>
-                    <td>
-                        <form method="POST" action="/admin/boost/delete/<?= $pkg['id'] ?>" style="display:inline;">
-                            <?= csrf_field() ?>
-                            <button class="btn btn-sm btn-danger">Deactivate</button>
-                        </form>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            <?php if (empty($packages)): ?>
-                <tr><td colspan="7" class="text-center text-muted" style="padding:20px;">No packages yet.</td></tr>
-            <?php endif; ?>
-        </tbody>
-    </table>
-</div>
+<?php if (!empty($packages)): ?>
+    <?php foreach ($packages as $pkg): ?>
+        <div class="card mb-2">
+            <form method="POST" action="/admin/boost/edit/<?= $pkg['id'] ?>">
+                <?= csrf_field() ?>
+                <div class="flex-between mb-2">
+                    <div class="flex gap-1" style="align-items:center;">
+                        <span class="text-muted" style="font-size:12px;">#<?= $pkg['id'] ?></span>
+                        <?= $pkg['is_active']
+                            ? '<span class="badge badge-green">Active</span>'
+                            : '<span class="badge badge-red">Inactive</span>' ?>
+                    </div>
+                    <div class="flex gap-1">
+                        <button type="submit" class="btn btn-sm btn-primary">Save</button>
+                        <?php if ($pkg['is_active']): ?>
+                            <button type="button" class="btn btn-sm btn-danger"
+                                    onclick="confirmAction('/admin/boost/delete/<?= $pkg['id'] ?>', 'Deactivate Package', 'Are you sure you want to deactivate <?= e($pkg['name']) ?>?')">
+                                Deactivate
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="grid-4">
+                    <div class="form-group">
+                        <label>Name</label>
+                        <input type="text" name="name" value="<?= e($pkg['name']) ?>" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Points</label>
+                        <input type="number" name="points" value="<?= $pkg['points'] ?>" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Price ($)</label>
+                        <input type="number" step="0.01" name="price" value="<?= $pkg['price'] ?>" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Duration (days)</label>
+                        <input type="number" name="duration_days" value="<?= $pkg['duration_days'] ?>" class="form-control" required>
+                    </div>
+                </div>
+            </form>
+        </div>
+    <?php endforeach; ?>
+<?php else: ?>
+    <div class="card text-center mb-3" style="padding:30px;">
+        <p class="text-muted">No packages yet.</p>
+    </div>
+<?php endif; ?>
 
-<!-- Add new -->
-<div class="card" style="max-width:500px;">
-    <h3 class="mb-2" style="font-size:13px;">Add New Package</h3>
+<div class="card" style="max-width:600px;">
+    <h3 class="section-title mb-2"><i class="fas fa-plus" style="color:var(--accent);"></i> Add New Package</h3>
     <form method="POST" action="/admin/boost/create">
         <?= csrf_field() ?>
-        <div class="grid-2">
+        <div class="grid-4">
             <div class="form-group">
                 <label>Name</label>
                 <input type="text" name="name" class="form-control" placeholder="Silver Boost" required>

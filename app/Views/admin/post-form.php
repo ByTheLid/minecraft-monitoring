@@ -5,7 +5,7 @@ $pageTitle = $post ? 'Edit Post' : 'New Post';
 $action = $post ? "/admin/posts/edit/{$post['id']}" : '/admin/posts/create';
 ?>
 
-<h1 style="font-size:16px;" class="mb-2"><?= $post ? 'Edit Post' : 'New Post' ?></h1>
+<h1 class="page-title mb-2"><?= $post ? 'Edit Post' : 'New Post' ?></h1>
 
 <div class="card" style="max-width:700px;">
     <form method="POST" action="<?= $action ?>">

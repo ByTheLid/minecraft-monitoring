@@ -91,11 +91,19 @@ class RefreshApiController extends Controller
             }
         }
 
+        // On OSPanel/Windows, PHP_BINARY points to php-cgi.exe (FastCGI).
+        // We need the CLI binary (php.exe) which is in the same directory.
         $phpBinary = PHP_BINARY ?: 'php';
 
         if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
-            $cmd = '"' . $phpBinary . '" "' . $pingScript . '"';
-            pclose(popen('start /B ' . $cmd, 'r'));
+            // Resolve CLI binary: replace php-cgi.exe with php.exe
+            $phpCli = $phpBinary;
+            if (stripos(basename($phpCli), 'php-cgi') !== false) {
+                $phpCli = dirname($phpCli) . DIRECTORY_SEPARATOR . 'php.exe';
+            }
+
+            $cmd = '"' . $phpCli . '" "' . $pingScript . '"';
+            pclose(popen('start "" /B ' . $cmd . ' > NUL 2>&1', 'r'));
         } else {
             $cmd = escapeshellarg($phpBinary) . ' ' . escapeshellarg($pingScript);
             exec($cmd . ' > /dev/null 2>&1 &');

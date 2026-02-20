@@ -37,10 +37,16 @@ $router->group('/dashboard', function ($router) {
 $router->group('/admin', function ($router) {
     $router->get('', [AdminController::class, 'index']);
     $router->get('/servers', [AdminController::class, 'servers']);
+    $router->get('/servers/{id}', [AdminController::class, 'serverDetail']);
+    $router->post('/servers/{id}/edit', [AdminController::class, 'editServer']);
     $router->post('/servers/{id}/approve', [AdminController::class, 'approveServer']);
     $router->post('/servers/{id}/reject', [AdminController::class, 'rejectServer']);
+    $router->post('/servers/{id}/unblock', [AdminController::class, 'unblockServer']);
+    $router->post('/servers/{id}/reset-votes', [AdminController::class, 'resetVotes']);
+    $router->post('/servers/{id}/reset-boosts', [AdminController::class, 'resetBoosts']);
     $router->get('/users', [AdminController::class, 'users']);
     $router->post('/users/{id}/toggle', [AdminController::class, 'toggleUser']);
+    $router->post('/users/{id}/role', [AdminController::class, 'changeRole']);
     $router->get('/posts', [AdminController::class, 'posts']);
     $router->get('/posts/create', [AdminController::class, 'createPostForm']);
     $router->post('/posts/create', [AdminController::class, 'createPost']);

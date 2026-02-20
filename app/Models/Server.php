@@ -133,9 +133,11 @@ class Server extends Model
         return static::db()->query($sql)->fetchAll();
     }
 
-    public static function getAllForAdmin(int $page = 1, int $perPage = 20, string $filter = 'all'): array
+    public static function getAllForAdmin(int $page = 1, int $perPage = 20, string $filter = 'all', string $search = ''): array
     {
         $where = '1=1';
+        $params = [];
+
         if ($filter === 'pending') {
             $where = 's.is_approved = 0 AND s.is_active = 1';
         } elseif ($filter === 'approved') {
@@ -144,10 +146,16 @@ class Server extends Model
             $where = 's.is_active = 0';
         }
 
+        if ($search !== '') {
+            $where .= " AND (s.name LIKE ? OR s.ip LIKE ?)";
+            $params[] = "%{$search}%";
+            $params[] = "%{$search}%";
+        }
+
         $offset = ($page - 1) * $perPage;
         $countSql = "SELECT COUNT(*) FROM servers s WHERE {$where}";
         $stmt = static::db()->prepare($countSql);
-        $stmt->execute();
+        $stmt->execute($params);
         $total = (int) $stmt->fetchColumn();
 
         $sql = "SELECT s.*, u.username as owner_name, sc.is_online, sc.players_online
@@ -158,7 +166,7 @@ class Server extends Model
                 ORDER BY s.created_at DESC
                 LIMIT ? OFFSET ?";
         $stmt = static::db()->prepare($sql);
-        $stmt->execute([$perPage, $offset]);
+        $stmt->execute(array_merge($params, [$perPage, $offset]));
 
         return [
             'data' => $stmt->fetchAll(),

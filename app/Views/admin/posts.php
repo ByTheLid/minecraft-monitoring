@@ -1,8 +1,8 @@
 <?php $layout = 'admin'; $adminPage = 'posts'; $pageTitle = 'Posts'; ?>
 
 <div class="flex-between mb-2">
-    <h1 style="font-size:16px;">Manage Posts</h1>
-    <a href="/admin/posts/create" class="btn btn-primary btn-sm">+ New Post</a>
+    <h1 class="page-title">Manage Posts</h1>
+    <a href="/admin/posts/create" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> New Post</a>
 </div>
 
 <div class="table-responsive">
@@ -22,20 +22,21 @@
                 <tr>
                     <td><?= $post['id'] ?></td>
                     <td><strong><?= e($post['title']) ?></strong></td>
-                    <td><span class="tag"><?= e($post['category']) ?></span></td>
+                    <td><span class="badge badge-blue"><?= e($post['category']) ?></span></td>
                     <td>
                         <?= $post['is_published']
-                            ? '<span class="text-green">Published</span>'
-                            : '<span class="text-muted">Draft</span>' ?>
+                            ? '<span class="badge badge-green"><i class="fas fa-check"></i> Published</span>'
+                            : '<span class="badge badge-muted"><i class="fas fa-pen"></i> Draft</span>' ?>
                     </td>
                     <td class="text-muted"><?= time_ago($post['created_at']) ?></td>
                     <td>
-                        <a href="/admin/posts/edit/<?= $post['id'] ?>" class="btn btn-sm btn-secondary">Edit</a>
-                        <form method="POST" action="/admin/posts/delete/<?= $post['id'] ?>" style="display:inline;"
-                              onsubmit="return confirm('Delete this post?')">
-                            <?= csrf_field() ?>
-                            <button class="btn btn-sm btn-danger">Delete</button>
-                        </form>
+                        <div class="flex gap-1">
+                            <a href="/admin/posts/edit/<?= $post['id'] ?>" class="btn btn-sm btn-secondary">Edit</a>
+                            <button class="btn btn-sm btn-danger"
+                                    onclick="confirmAction('/admin/posts/delete/<?= $post['id'] ?>', 'Delete Post', 'Are you sure you want to delete this post? This action cannot be undone.')">
+                                Delete
+                            </button>
+                        </div>
                     </td>
                 </tr>
             <?php endforeach; ?>
@@ -45,3 +46,15 @@
         </tbody>
     </table>
 </div>
+
+<?php if (($meta['total_pages'] ?? 1) > 1): ?>
+    <div class="pagination">
+        <?php for ($i = 1; $i <= $meta['total_pages']; $i++): ?>
+            <?php if ($i === $meta['page']): ?>
+                <span class="active"><?= $i ?></span>
+            <?php else: ?>
+                <a href="/admin/posts?page=<?= $i ?>"><?= $i ?></a>
+            <?php endif; ?>
+        <?php endfor; ?>
+    </div>
+<?php endif; ?>

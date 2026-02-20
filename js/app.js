@@ -167,3 +167,27 @@ function formatNumber(num) {
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return String(num);
 }
+
+// ==========================================
+// Confirmation Modal
+// ==========================================
+function confirmAction(action, title, message) {
+    var modal = document.getElementById('confirmModal');
+    var form = document.getElementById('confirmForm');
+    if (!modal || !form) return;
+    document.getElementById('confirmTitle').textContent = title;
+    document.getElementById('confirmMessage').textContent = message;
+    form.action = action;
+    modal.classList.add('active');
+}
+
+function closeConfirmModal() {
+    var modal = document.getElementById('confirmModal');
+    if (modal) modal.classList.remove('active');
+}
+
+document.addEventListener('click', function(e) {
+    if (e.target.id === 'confirmModal') {
+        closeConfirmModal();
+    }
+});
