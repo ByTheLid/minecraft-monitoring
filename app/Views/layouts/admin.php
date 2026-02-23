@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <?php 
         $designPref = auth()['design_preference'] ?? 'modern';
-        $cssFile = $designPref === 'pixel' ? 'style-pixel.css' : 'style-modern.css';
+        $cssFile = $designPref === 'lightweight' || $designPref === 'pixel' ? 'theme-lightweight.css' : 'theme-aesthetic.css';
     ?>
+    <link rel="stylesheet" href="/css/style.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/css/<?= $cssFile ?>?v=<?= time() ?>">
 </head>
 <body>
@@ -21,9 +22,6 @@
             </a>
             <div class="navbar-right" style="display: flex; align-items: center; gap: 10px;">
                 <a href="/" class="btn btn-sm btn-secondary"><i class="fas fa-external-link-alt"></i> View Site</a>
-                <button class="theme-toggle" id="designToggle" title="Toggle Design Version (Modern/Pixel)" style="background: none; border: none; cursor: pointer; color: var(--text-color); font-size: 1.2rem;">
-                    <i class="fas <?= $designPref === 'pixel' ? 'fa-gamepad' : 'fa-paint-brush' ?>"></i>
-                </button>
                 <a href="/logout" class="btn btn-sm btn-danger"><i class="fas fa-sign-out-alt"></i> Exit</a>
             </div>
         </div>
@@ -34,6 +32,7 @@
             <a href="/admin" class="<?= ($adminPage ?? '') === 'dashboard' ? 'active' : '' ?>"><i class="fas fa-chart-bar"></i> Dashboard</a>
             <a href="/admin/servers?filter=pending" class="<?= ($adminPage ?? '') === 'servers' ? 'active' : '' ?>"><i class="fas fa-server"></i> Servers</a>
             <a href="/admin/users" class="<?= ($adminPage ?? '') === 'users' ? 'active' : '' ?>"><i class="fas fa-users"></i> Users</a>
+            <a href="/admin/reviews" class="<?= ($adminPage ?? '') === 'reviews' ? 'active' : '' ?>"><i class="fas fa-comments"></i> Reviews</a>
             <a href="/admin/posts" class="<?= ($adminPage ?? '') === 'posts' ? 'active' : '' ?>"><i class="fas fa-newspaper"></i> Posts</a>
             <a href="/admin/analytics" class="<?= ($adminPage ?? '') === 'analytics' ? 'active' : '' ?>"><i class="fas fa-chart-line"></i> Analytics</a>
             <a href="/admin/boost" class="<?= ($adminPage ?? '') === 'boost' ? 'active' : '' ?>"><i class="fas fa-rocket"></i> Boost</a>

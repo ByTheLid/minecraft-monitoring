@@ -3,7 +3,8 @@
     "description": "Minecraft Server Monitoring Platform",
     "type": "project",
     "require": {
-        "php": ">=8.2"
+        "php": ">=8.2",
+        "phpmailer/phpmailer": "^7.0"
     },
     "autoload": {
         "psr-4": {

@@ -1,0 +1,39 @@
+/* Modern Theme Variables */
+
+:root {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-card: #0f3460;
+    --bg-input: #0d1b36;
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --accent-green: #00ff88;
+    --accent-blue: #00d4ff;
+    --accent-red: #ff4444;
+    --accent-gold: #ffd700;
+    --accent-purple: #b44aff;
+    --glow-green: 0 0 10px rgba(0, 255, 136, 0.3);
+    --glow-blue: 0 0 10px rgba(0, 212, 255, 0.3);
+    --glow-red: 0 0 10px rgba(255, 68, 68, 0.3);
+    --glow-gold: 0 0 10px rgba(255, 215, 0, 0.3);
+    --pixel-border: 3px solid;
+    --font-pixel: "Press Start 2P", monospace;
+    --font-body: "Roboto Mono", monospace;
+    --radius: 4px;
+    --transition: all 0.2s ease;
+}
+
+[data-theme="light"] {
+    --bg-primary: #f0f2f5;
+    --bg-secondary: #ffffff;
+    --bg-card: #e8edf2;
+    --bg-input: #f5f7fa;
+    --text-primary: #1a1a2e;
+    --text-secondary: #555;
+    --accent-green: #00cc6a;
+    --accent-blue: #0099cc;
+    --accent-red: #cc3333;
+    --accent-gold: #cc9900;
+    --glow-green: 0 0 8px rgba(0, 204, 106, 0.2);
+    --glow-blue: 0 0 8px rgba(0, 153, 204, 0.2);
+}

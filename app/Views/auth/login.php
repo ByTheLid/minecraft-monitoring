@@ -15,8 +15,11 @@
                 <input type="text" id="login" name="login" class="form-control"
                        value="<?= e(old('login')) ?>" placeholder="Enter username or email" required autofocus>
             </div>
-            <div class="form-group">
-                <label for="password">Password</label>
+            <div class="form-group mb-2">
+                <div class="flex-between">
+                    <label for="password">Password</label>
+                    <a href="/forgot-password" class="text-muted" style="font-size: 0.85rem; text-decoration: underline;">Forgot password?</a>
+                </div>
                 <input type="password" id="password" name="password" class="form-control"
                        placeholder="Enter password" required>
             </div>

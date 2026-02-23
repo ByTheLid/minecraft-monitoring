@@ -99,6 +99,9 @@ class DashboardController extends Controller
              )->execute([$serverId]);
         }
 
+        // Unlock Achievement
+        \App\Models\Achievement::unlock($user['id'], 'server_owner');
+
         unset($_SESSION['_old_input']);
         flash('success', 'Server added! It will appear after moderation.');
         return $this->redirect('/dashboard');
@@ -181,8 +184,9 @@ class DashboardController extends Controller
 
     public function settings(Request $request): Response
     {
+        $user = \App\Models\User::find(auth()['id']);
         return $this->view('dashboard.settings', [
-             'user' => auth()
+             'user' => $user
         ]);
     }
 
@@ -192,6 +196,11 @@ class DashboardController extends Controller
         $id = $user['id'];
         
         $email = sanitize($request->input('email', ''));
+        $bio = sanitize($request->input('bio', ''));
+        $discord = sanitize($request->input('social_discord', ''));
+        $telegram = sanitize($request->input('social_telegram', ''));
+        $design = $request->input('design_preference', 'aesthetic');
+        
         $password = $request->input('password', '');
         $newPassword = $request->input('new_password', '');
         
@@ -224,7 +233,8 @@ class DashboardController extends Controller
         // Verify current password if changing password or high security action
         // For simplicity, verify only if changing password
         if ($newPassword) {
-            if (!\App\Models\User::verifyPassword($user, $password)) {
+            $fullUser = \App\Models\User::find($user['id']);
+            if (!$fullUser || !\App\Models\User::verifyPassword($fullUser, $password)) {
                  flash('error', 'Incorrect current password.');
                  return $this->redirect('/dashboard/settings');
             }
@@ -236,10 +246,16 @@ class DashboardController extends Controller
             $updateData['password_hash'] = password_hash($newPassword, PASSWORD_BCRYPT);
         }
         
+        $updateData['bio'] = $bio;
+        $updateData['social_discord'] = $discord;
+        $updateData['social_telegram'] = $telegram;
+        $updateData['design_preference'] = in_array($design, ['aesthetic', 'lightweight']) ? $design : 'aesthetic';
+        
         \App\Models\User::update($id, $updateData);
         
         // Update session
         $_SESSION['user']['email'] = $email;
+        $_SESSION['user']['design_preference'] = $updateData['design_preference'];
         
         flash('success', 'Settings updated.');
         return $this->redirect('/dashboard/settings');

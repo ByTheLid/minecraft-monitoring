@@ -5,22 +5,22 @@ $pageTitle = 'Admin Dashboard';
 $extraJs = ['https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js', '/js/admin-charts.js'];
 ?>
 
-<div class="grid-4 mb-3">
-    <div class="card">
-        <div class="text-muted" style="font-size:12px; text-transform:uppercase;">Total Servers</div>
-        <div style="font-size:24px; font-weight:bold;"><?= $stats['servers'] ?></div>
+<div class="dashboard-stats mb-4">
+    <div class="stat-card">
+        <div class="stat-value"><?= $stats['servers'] ?></div>
+        <div class="stat-label">Total Servers</div>
     </div>
-    <div class="card">
-        <div class="text-muted" style="font-size:12px; text-transform:uppercase;">Total Users</div>
-        <div style="font-size:24px; font-weight:bold;"><?= $stats['users'] ?></div>
+    <div class="stat-card">
+        <div class="stat-value"><?= $stats['users'] ?></div>
+        <div class="stat-label">Total Users</div>
     </div>
-    <div class="card">
-        <div class="text-muted" style="font-size:12px; text-transform:uppercase;">Total Votes</div>
-        <div style="font-size:24px; font-weight:bold;"><?= $stats['votes'] ?></div>
+    <div class="stat-card">
+        <div class="stat-value"><?= $stats['votes'] ?></div>
+        <div class="stat-label">Total Votes</div>
     </div>
-    <div class="card">
-        <div class="text-muted" style="font-size:12px; text-transform:uppercase;">Active Boosts</div>
-        <div style="font-size:24px; font-weight:bold; color:var(--accent-gold);"><?= $stats['boosts_active'] ?></div>
+    <div class="stat-card" style="border-color: rgba(245, 158, 11, 0.3);">
+        <div class="stat-value text-gold"><?= $stats['boosts_active'] ?></div>
+        <div class="stat-label">Active Boosts</div>
     </div>
 </div>
 

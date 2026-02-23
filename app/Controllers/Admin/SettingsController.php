@@ -22,7 +22,8 @@ class SettingsController extends Controller
             'max_servers_per_user',
             'site_name', 'site_description', 'seo_keywords',
             'social_discord', 'social_vk', 'social_telegram',
-            'asset_logo', 'asset_favicon'
+            'asset_logo', 'asset_favicon',
+            'smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_email', 'smtp_from_name'
         ];
         
         foreach ($keys as $key) {

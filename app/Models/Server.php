@@ -116,7 +116,12 @@ class Server extends Model
     public static function getByUser(int $userId): array
     {
         $sql = "SELECT s.*, sc.is_online, sc.players_online, sc.players_max, sc.ping_ms,
-                       sr.rank_score, sr.vote_count
+                       sr.rank_score, sr.vote_count,
+                       sr.stars, sr.has_border, sr.has_bg_color, sr.highlight_color,
+                       (SELECT GROUP_CONCAT(bp_pkg.name SEPARATOR ', ')
+                        FROM boost_purchases bp
+                        LEFT JOIN boost_packages bp_pkg ON bp.package_id = bp_pkg.id
+                        WHERE bp.server_id = s.id AND bp.expires_at > NOW()) as active_boosts
                 FROM servers s
                 LEFT JOIN server_status_cache sc ON s.id = sc.server_id
                 LEFT JOIN server_rankings sr ON s.id = sr.server_id

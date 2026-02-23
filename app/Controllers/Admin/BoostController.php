@@ -76,7 +76,8 @@ class BoostController extends Controller
         $id = (int) $request->param('id');
         $password = $request->input('password', '');
         
-        if (!User::verifyPassword(auth(), $password)) {
+        $user = User::find(auth()['id']);
+        if (!$user || !User::verifyPassword($user, $password)) {
             flash('error', 'Incorrect password. Cannot delete package.');
             return $this->redirect('/admin/boost');
         }

@@ -50,10 +50,27 @@
                 </thead>
                 <tbody>
                     <?php foreach ($servers as $server): ?>
-                        <tr>
+                        <?php 
+                            $bgColor = ($server['has_bg_color'] && $server['highlight_color']) ? 'background: linear-gradient(135deg, '.e($server['highlight_color']).'22 0%, var(--bg-card) 100%);' : '';
+                            $borderColor = ($server['has_border'] && $server['highlight_color']) ? 'border: 1px solid '.e($server['highlight_color']).'; box-shadow: 0 0 15px '.e($server['highlight_color']).'33;' : '';
+                            $cardStyle = trim("$bgColor $borderColor");
+                        ?>
+                        <tr style="<?= $cardStyle ?>">
                             <td>
-                                <strong><?= e($server['name']) ?></strong><br>
-                                <small class="text-muted"><?= e($server['ip']) ?>:<?= $server['port'] ?></small>
+                                <strong><?= e($server['name']) ?></strong>
+                                <?php if (!empty($server['stars']) && (int)$server['stars'] > 0): ?>
+                                    <span class="server-stars text-gold" style="font-size: 12px; margin-left: 5px;">
+                                        <?php for($star = 0; $star < min(3, (int)$server['stars']); $star++): ?>
+                                            <i class="fas fa-star"></i>
+                                        <?php endfor; ?>
+                                    </span>
+                                <?php endif; ?>
+                                <?php if (!empty($server['active_boosts'])): ?>
+                                    <div class="text-gold" style="font-size: 11px; margin-top: 2px;">
+                                        <i class="fas fa-bolt"></i> <?= e($server['active_boosts']) ?>
+                                    </div>
+                                <?php endif; ?>
+                                <small class="text-muted block mt-1"><?= e($server['ip']) ?>:<?= $server['port'] ?></small>
                             </td>
                             <td>
                                 <?php if ($server['is_online'] ?? false): ?>

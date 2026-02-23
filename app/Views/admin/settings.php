@@ -33,6 +33,7 @@
             <div class="settings-tab" data-tab="economics">Economics & SEO</div>
             <div class="settings-tab" data-tab="socials">Socials & Contacts</div>
             <div class="settings-tab" data-tab="assets">Assets</div>
+            <div class="settings-tab" data-tab="email">Email (SMTP)</div>
         </div>
 
         <!-- General Tab -->
@@ -128,6 +129,44 @@
                     <label>Favicon URL</label>
                     <input type="text" name="asset_favicon" class="form-control" value="<?= e($vals['asset_favicon'] ?? '/favicon.ico') ?>" placeholder="/favicon.ico">
                     <div class="form-text">Path to the website favicon.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Email Tab -->
+        <div id="email" class="settings-content">
+            <div class="form-section">
+                <h3 class="section-title mb-2">SMTP Settings</h3>
+                <p class="text-muted mb-3" style="font-size: 13px;">Used for sending password reset emails and system notifications.</p>
+                <div class="grid-2">
+                    <div class="form-group mb-2">
+                        <label>SMTP Host</label>
+                        <input type="text" name="smtp_host" class="form-control" value="<?= e($vals['smtp_host'] ?? '') ?>" placeholder="smtp.gmail.com">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label>SMTP Port</label>
+                        <input type="number" name="smtp_port" class="form-control" value="<?= e($vals['smtp_port'] ?? '587') ?>" placeholder="587">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="form-group mb-2">
+                        <label>SMTP Username</label>
+                        <input type="text" name="smtp_user" class="form-control" value="<?= e($vals['smtp_user'] ?? '') ?>" placeholder="user@gmail.com">
+                    </div>
+                    <div class="form-group mb-2">
+                        <label>SMTP Password</label>
+                        <input type="password" name="smtp_pass" class="form-control" value="<?= e($vals['smtp_pass'] ?? '') ?>" placeholder="••••••••">
+                    </div>
+                </div>
+                <div class="grid-2 mt-2">
+                    <div class="form-group">
+                        <label>From Email</label>
+                        <input type="email" name="smtp_from_email" class="form-control" value="<?= e($vals['smtp_from_email'] ?? '') ?>" placeholder="noreply@domain.com">
+                    </div>
+                    <div class="form-group">
+                        <label>From Name</label>
+                        <input type="text" name="smtp_from_name" class="form-control" value="<?= e($vals['smtp_from_name'] ?? 'MC Monitoring') ?>" placeholder="MC Monitoring">
+                    </div>
                 </div>
             </div>
         </div>

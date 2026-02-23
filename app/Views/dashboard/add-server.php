@@ -86,3 +86,72 @@
         </form>
     </div>
 </div>
+
+<link href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css" rel="stylesheet" type="text/css" />
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+<style>
+.tagify {
+    --tags-border-color: rgba(255,255,255,0.1) !important;
+    --tags-hover-border-color: var(--accent-green) !important;
+    --tags-focus-border-color: var(--accent-green) !important;
+    --tag-bg: rgba(16, 185, 129, 0.1) !important;
+    --tag-hover: rgba(16, 185, 129, 0.2) !important;
+    --tag-text-color: var(--text-primary) !important;
+    --placeholder-color: #888 !important;
+    background: var(--bg-input) !important;
+    border-radius: 6px !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    padding: 0;
+}
+.tagify__input {
+    color: var(--text-primary) !important;
+}
+.tagify__dropdown {
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5) !important;
+    border-radius: 6px !important;
+    overflow: hidden;
+    margin-top: 4px;
+}
+.tagify__dropdown__wrapper {
+    background: var(--bg-card) !important;
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    border-radius: 6px !important;
+}
+.tagify__dropdown__item {
+    color: var(--text-primary) !important;
+    padding: 10px 14px !important;
+    border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+    transition: background 0.2s ease, color 0.2s ease !important;
+}
+.tagify__dropdown__item:hover, .tagify__dropdown__item--active {
+    background: rgba(16, 185, 129, 0.1) !important;
+    color: var(--accent-green) !important;
+}
+</style>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const input = document.getElementById('tags');
+    const minecraftTags = [
+        "survival", "pvp", "pve", "vanilla", "semi-vanilla", "creative", "minigames", 
+        "factions", "skyblock", "prison", "towny", "roleplay", "mcmmo", "smp", "anarchy", 
+        "hardcore", "pixelmon", "spigot", "paper", "bukkit", "forge", "fabric", "quests", 
+        "economy", "bedwars", "skywars", "parkour", "dropper", "deathrun", "hide and seek", 
+        "hunger games", "kitpvp", "uhc", "lifesteal", "earth", "origins", "slimefun", "cars", 
+        "guns", "vehicles", "zombies", "magic", "dungeons", "custom enchants", "free ranks", 
+        "no grief", "whitelist", "cracked", "premium", "crossplay", "bedrock", "java", 
+        "1.8", "1.12", "1.16", "1.19", "1.20", "1.21"
+    ];
+
+    new Tagify(input, {
+        whitelist: minecraftTags,
+        maxTags: 10,
+        dropdown: {
+            maxItems: 20,
+            classname: "tags-look",
+            enabled: 0,
+            closeOnSelect: false
+        },
+        originalInputValueFormat: valuesArr => valuesArr.map(item => item.value).join(',')
+    });
+});
+</script>

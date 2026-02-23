@@ -15,8 +15,9 @@
         } elseif (isset($_COOKIE['design_preference'])) {
             $designPref = $_COOKIE['design_preference'];
         }
-        $cssFile = $designPref === 'pixel' ? 'style-pixel.css' : 'style-modern.css';
+        $cssFile = $designPref === 'lightweight' || $designPref === 'pixel' ? 'theme-lightweight.css' : 'theme-aesthetic.css';
     ?>
+    <link rel="stylesheet" href="/css/style.css?v=<?= time() ?>">
     <link rel="stylesheet" href="/css/<?= $cssFile ?>?v=<?= time() ?>">
     <?php if (!empty($extraCss)): ?>
         <?php foreach ($extraCss as $css): ?>
@@ -42,13 +43,11 @@
             <ul class="navbar-nav" id="navMenu">
                 <li><a href="/" class="<?= ($currentPage ?? '') === 'home' ? 'active' : '' ?>">Home</a></li>
                 <li><a href="/servers" class="<?= ($currentPage ?? '') === 'servers' ? 'active' : '' ?>">Servers</a></li>
+                <li><a href="/users" class="<?= ($currentPage ?? '') === 'users' ? 'active' : '' ?>">Users</a></li>
                 <li><a href="/posts" class="<?= ($currentPage ?? '') === 'posts' ? 'active' : '' ?>">News</a></li>
             </ul>
 
             <div class="navbar-right">
-                <button class="theme-toggle" id="designToggle" title="Toggle Design Version (Modern/Pixel)">
-                    <i class="fas <?= $designPref === 'pixel' ? 'fa-gamepad' : 'fa-paint-brush' ?>"></i>
-                </button>
                 <button class="theme-toggle" id="themeToggle" title="Toggle theme"><i class="fas fa-moon"></i></button>
                 <?php if (auth()): ?>
                     <a href="/dashboard" class="btn btn-sm btn-secondary">

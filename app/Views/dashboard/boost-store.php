@@ -1,6 +1,7 @@
-<?php $layout = 'dashboard'; $pageTitle = 'Boost Store - ' . e($server['name']); ?>
+<?php $layout = 'main'; $currentPage = 'dashboard'; $pageTitle = 'Boost Store - ' . e($server['name']); ?>
 
-<div class="flex-between mb-2">
+<div class="container">
+<div class="flex-between mb-2 mt-4">
     <h1>Boost Store: <span class="text-gold"><?= e($server['name']) ?></span></h1>
     <a href="/dashboard" class="btn btn-sm btn-secondary"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
 </div>
@@ -15,6 +16,42 @@
             <i class="fas fa-coins"></i> <?= number_format($user['balance'], 2) ?>
         </div>
     </div>
+</div>
+
+<div class="card mb-3">
+    <h3 class="mb-2"><i class="fas fa-boxes text-primary"></i> Active Server Boosts</h3>
+    <?php if (empty($activeBoosts)): ?>
+        <p class="text-muted" style="font-size: 14px;">This server currently doesn't have any active boosts.</p>
+    <?php else: ?>
+        <div class="table-responsive">
+            <table class="table table-sm" style="font-size: 14px;">
+                <thead>
+                    <tr>
+                        <th>Package</th>
+                        <th>Points Added</th>
+                        <th>Expires In</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($activeBoosts as $boost): ?>
+                        <tr>
+                            <td>
+                                <strong><?= $boost['package_id'] ? e($boost['package_name']) : 'Manual Boost' ?></strong>
+                                <?php if ($boost['has_border']): ?>
+                                    <span class="badge badge-success" style="font-size: 10px;">Border</span>
+                                <?php endif; ?>
+                                <?php if ($boost['has_color']): ?>
+                                    <span class="badge badge-warning" style="font-size: 10px;">Color</span>
+                                <?php endif; ?>
+                            </td>
+                            <td>+<?= $boost['points'] ?> pts</td>
+                            <td><?= time_ago($boost['expires_at']) ?></td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
+        </div>
+    <?php endif; ?>
 </div>
 
 <div class="grid-2 gap-2">
@@ -79,4 +116,5 @@
             <button type="submit" class="btn btn-primary btn-block">Purchase Package</button>
         </form>
     </div>
+</div>
 </div>

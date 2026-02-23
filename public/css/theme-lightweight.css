@@ -1,0 +1,79 @@
+/* Lightweight Theme Overrides */
+/* Disables expensive UI effects like glassmorphism, large shadows, complex gradients, and animations for maximum performance */
+
+:root {
+    --glass-bg: var(--bg-card);
+    --glass-border: 1px solid var(--border-color);
+    --card-shadow: none;
+    --glow-green: none;
+    --glow-blue: none;
+    --transition: none;
+    /* Disable all transitions for maximum speed */
+    --radius: 8px;
+    /* Slightly sharper corners often render faster */
+}
+
+/* Remove all box-shadows, scaling, and blurs globally */
+* {
+    box-shadow: none !important;
+    transform: none !important;
+    transition: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+}
+
+/* Simplify Navbar to solid colors */
+.navbar {
+    background: var(--bg-card) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Simplify Hero Section */
+.hero {
+    background: var(--bg-primary) !important;
+}
+
+.hero h1 span {
+    background: none !important;
+    -webkit-background-clip: unset !important;
+    -webkit-text-fill-color: var(--accent-green) !important;
+}
+
+/* Solid Cards */
+.card,
+.server-card,
+.stat-card {
+    background: var(--bg-card) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.server-card:hover,
+.card:hover,
+.stat-card:hover {
+    border-color: var(--accent-green) !important;
+}
+
+/* Override inline gradient styles on highlighted servers */
+.server-card[style*="linear-gradient"] {
+    background: var(--bg-card) !important;
+    border-left: 4px solid var(--accent-gold) !important;
+}
+
+/* Solid inputs and blocks */
+.form-control,
+.tabs,
+.tagify__dropdown__wrapper {
+    background: var(--bg-input) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+.tagify {
+    background: var(--bg-input) !important;
+    border: 1px solid var(--border-color) !important;
+}
+
+/* Button simplifications */
+.btn {
+    border-radius: 4px !important;
+}

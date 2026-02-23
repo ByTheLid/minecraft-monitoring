@@ -44,8 +44,10 @@ try {
 
     foreach ($batches as $batch) {
         foreach ($batch as $server) {
-            $ping = new MinecraftPing($server['ip'], $server['port'], 3);
+            $ping = new MinecraftPing(trim($server['ip']), (int)trim($server['port']), 10);
             $result = $ping->ping();
+            
+            echo "Pinged {$server['ip']}:{$server['port']} - Online: " . ($result['is_online'] ? 'Yes' : 'No') . "\n";
 
             // Record stat
             ServerStat::record($server['id'], $result);

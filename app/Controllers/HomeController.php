@@ -53,8 +53,17 @@ class HomeController extends Controller
             return $this->view('errors.404', [], 404);
         }
 
+        $reviews = \App\Models\Review::getByServerId($id);
+        $hasReviewed = false;
+        
+        if (auth()) {
+            $hasReviewed = \App\Models\Review::hasUserReviewed($id, auth()['id']);
+        }
+
         return $this->view('servers.detail', [
             'server' => $server,
+            'reviews' => $reviews,
+            'hasReviewed' => $hasReviewed
         ]);
     }
 }

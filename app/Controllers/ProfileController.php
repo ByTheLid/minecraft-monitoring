@@ -24,10 +24,14 @@ class ProfileController extends Controller
         // Get recent votes
         $votes = \App\Models\Vote::getByUser($user['id'], 5);
 
+        // Get achievements
+        $achievements = \App\Models\Achievement::getForUser($user['id']);
+
         return $this->view('profile.show', [
             'user' => $user,
             'servers' => $servers,
             'votes' => $votes,
+            'achievements' => $achievements,
         ]);
     }
 }

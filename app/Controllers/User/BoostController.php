@@ -31,12 +31,24 @@ class BoostController extends Controller
         $currentStars = (int) $stmt->fetchColumn();
         $starPrice = 50 * pow(2, $currentStars);
 
+        // Fetch currently active boosts for this server
+        $stmtActive = $db->prepare("
+            SELECT bp.*, pkg.name as package_name, pkg.has_border, pkg.has_bg_color as has_color 
+            FROM boost_purchases bp 
+            LEFT JOIN boost_packages pkg ON bp.package_id = pkg.id 
+            WHERE bp.server_id = ? AND bp.expires_at > NOW()
+            ORDER BY bp.expires_at ASC
+        ");
+        $stmtActive->execute([$id]);
+        $activeBoosts = $stmtActive->fetchAll();
+
         return $this->view('dashboard.boost-store', [
             'server' => $server,
             'packages' => $packages,
             'user' => $user,
             'currentStars' => $currentStars,
-            'starPrice' => $starPrice
+            'starPrice' => $starPrice,
+            'activeBoosts' => $activeBoosts
         ]);
     }
 
@@ -94,6 +106,9 @@ class BoostController extends Controller
                 VALUES (?, ?, ?, 0, DATE_ADD(NOW(), INTERVAL 30 DAY))
             ")->execute([$id, $user['id'], $starPkgId]);
 
+            // Unlock Achievement
+            \App\Models\Achievement::unlock($user['id'], 'supporter');
+
             flash('success', "Purchased Star Level " . ($currentStars + 1) . "!");
             return $this->redirect("/dashboard/server/{$id}/boost");
         }
@@ -119,6 +134,9 @@ class BoostController extends Controller
             INSERT INTO boost_purchases (server_id, user_id, package_id, points, expires_at)
             VALUES (?, ?, ?, ?, DATE_ADD(NOW(), INTERVAL ? DAY))
         ")->execute([$id, $user['id'], $pkg['id'], $pkg['points'], $pkg['duration_days']]);
+
+        // Unlock Achievement
+        \App\Models\Achievement::unlock($user['id'], 'supporter');
 
         flash('success', "Purchased '{$pkg['name']}' successfully!");
         return $this->redirect("/dashboard/server/{$id}/boost");

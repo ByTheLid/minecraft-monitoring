@@ -58,6 +58,11 @@ class VoteApiController extends Controller
         // Cast vote
         Vote::castVote($serverId, $userId, $ip, $username);
 
+        // Unlock Achievement
+        if ($userId) {
+            \App\Models\Achievement::unlock($userId, 'first_vote');
+        }
+
         // Update rankings cache immediately
         $db = \App\Core\Database::getInstance();
         

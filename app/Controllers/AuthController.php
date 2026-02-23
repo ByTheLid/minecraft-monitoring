@@ -104,4 +104,91 @@ class AuthController extends Controller
         AuthService::logout();
         return $this->redirect('/');
     }
+
+    public function forgotPasswordForm(Request $request): Response
+    {
+        if (auth()) {
+            return $this->redirect('/dashboard');
+        }
+        return $this->view('auth.forgot-password');
+    }
+
+    public function sendResetLink(Request $request): Response
+    {
+        $email = sanitize($request->input('email', ''));
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            flash('error', 'Please enter a valid email address.');
+            return $this->redirect('/forgot-password');
+        }
+
+        $user = User::findByEmail($email);
+        if ($user) {
+            $token = bin2hex(random_bytes(32));
+            User::createPasswordResetToken($email, $token);
+
+            $mailService = new \App\Services\MailService();
+            if ($mailService->isReady()) {
+                if ($mailService->sendPasswordResetLink($email, $token)) {
+                    flash('success', 'If this email exists in our system, a password reset link has been sent to it.');
+                } else {
+                    flash('error', 'Failed to send the email. Please contact an administrator.');
+                }
+            } else {
+                flash('error', 'Mail service is not configured. Please contact an administrator.');
+            }
+        } else {
+            // For security, do not reveal if email exists
+            flash('success', 'If this email exists in our system, a password reset link has been sent to it.');
+        }
+
+        return $this->redirect('/forgot-password');
+    }
+
+    public function resetPasswordForm(Request $request): Response
+    {
+        if (auth()) {
+            return $this->redirect('/dashboard');
+        }
+
+        $token = $request->query('token');
+        if (!$token || !User::verifyPasswordResetToken($token)) {
+            flash('error', 'Invalid or expired password reset token.');
+            return $this->redirect('/forgot-password');
+        }
+
+        return $this->view('auth.reset-password', ['token' => $token]);
+    }
+
+    public function resetPassword(Request $request): Response
+    {
+        $token = $request->input('token', '');
+        $password = $request->input('password', '');
+        $passwordConfirm = $request->input('password_confirm', '');
+
+        $email = User::verifyPasswordResetToken($token);
+        if (!$email) {
+            flash('error', 'Invalid or expired password reset token.');
+            return $this->redirect('/forgot-password');
+        }
+
+        if (strlen($password) < 8) {
+            flash('error', 'Password must be at least 8 characters long.');
+            return $this->redirect('/reset-password?token=' . $token);
+        }
+
+        if ($password !== $passwordConfirm) {
+            flash('error', 'Passwords do not match.');
+            return $this->redirect('/reset-password?token=' . $token);
+        }
+
+        if (User::updatePasswordByEmail($email, $password)) {
+            User::deletePasswordResetTokens($email);
+            flash('success', 'Your password has been successfully reset. You can now login.');
+            return $this->redirect('/login');
+        }
+
+        flash('error', 'An error occurred while resetting your password. Please try again later.');
+        return $this->redirect('/reset-password?token=' . $token);
+    }
 }

@@ -21,7 +21,20 @@ $router->get('/servers', [HomeController::class, 'servers']);
 $router->get('/server/{id}', [HomeController::class, 'serverDetail']);
 $router->get('/posts', [PostController::class, 'index']);
 $router->get('/post/{id}', [PostController::class, 'show']);
+$router->get('/users', [\App\Controllers\UserController::class, 'index']);
 $router->get('/user/{username}', [\App\Controllers\ProfileController::class, 'show']);
+$router->get('/sitemap.xml', [\App\Controllers\SitemapController::class, 'index']);
+
+// Internal API Routes (for the site itself)
+$router->get('/api/server/{id}/banner.png', [\App\Controllers\Api\BannerController::class, 'generate']);
+
+// Public Developer API Routes (JSON)
+$router->group('/api/v1', function ($router) {
+    $router->get('/server/{id}', [\App\Controllers\Api\PublicApiController::class, 'server']);
+}, [\App\Middleware\CorsMiddleware::class, \App\Middleware\RateLimitMiddleware::class]);
+
+// Reviews
+$router->post('/server/{id}/review', [\App\Controllers\ReviewController::class, 'store'], [AuthMiddleware::class, CsrfMiddleware::class]);
 
 // Utility routes
 $router->post('/design/toggle', [DesignController::class, 'toggle']);
@@ -32,6 +45,12 @@ $router->post('/login', [AuthController::class, 'login'], [CsrfMiddleware::class
 $router->get('/register', [AuthController::class, 'registerForm']);
 $router->post('/register', [AuthController::class, 'register'], [CsrfMiddleware::class]);
 $router->get('/logout', [AuthController::class, 'logout']);
+
+// Password Reset
+$router->get('/forgot-password', [AuthController::class, 'forgotPasswordForm']);
+$router->post('/forgot-password', [AuthController::class, 'sendResetLink'], [CsrfMiddleware::class]);
+$router->get('/reset-password', [AuthController::class, 'resetPasswordForm']);
+$router->post('/reset-password', [AuthController::class, 'resetPassword'], [CsrfMiddleware::class]);
 
 // Dashboard (auth required)
 $router->group('/dashboard', function ($router) {
@@ -65,6 +84,10 @@ $router->group('/admin', function ($router) {
     // Users
     $router->get('/users', [AdminUserController::class, 'index']);
     $router->post('/users/{id}/toggle', [AdminUserController::class, 'toggle']);
+
+    // Reviews (Admin)
+    $router->get('/reviews', [\App\Controllers\Admin\ReviewController::class, 'index']);
+    $router->post('/reviews/{id}/delete', [\App\Controllers\Admin\ReviewController::class, 'delete']);
 
     // Posts
     $router->get('/posts', [AdminPostController::class, 'index']);

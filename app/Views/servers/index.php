@@ -33,7 +33,12 @@
             <?php $rank = (($meta['page'] - 1) * $meta['per_page']); ?>
             <?php foreach ($servers as $server): ?>
                 <?php $rank++; ?>
-                <div class="server-card">
+                <?php 
+                    $bgColor = ($server['has_bg_color'] && $server['highlight_color']) ? 'background: linear-gradient(135deg, '.e($server['highlight_color']).'22 0%, var(--bg-card) 100%);' : '';
+                    $borderColor = ($server['has_border'] && $server['highlight_color']) ? 'border: 1px solid '.e($server['highlight_color']).'; box-shadow: 0 0 15px '.e($server['highlight_color']).'33;' : '';
+                    $cardStyle = trim("$bgColor $borderColor");
+                ?>
+                <div class="server-card" style="<?= $cardStyle ?>">
                     <div class="server-icon">
                         <?php if (!empty($server['favicon_base64'])): ?>
                             <img src="<?= e($server['favicon_base64']) ?>" alt="">
@@ -45,6 +50,14 @@
                         <h3>
                             <span class="server-rank">#<?= $rank ?></span>
                             <a href="/server/<?= $server['id'] ?>"><?= e($server['name']) ?></a>
+                            
+                            <?php if (!empty($server['stars']) && (int)$server['stars'] > 0): ?>
+                                <span class="server-stars text-gold" style="font-size: 14px; margin-left: 5px;">
+                                    <?php for($star = 0; $star < min(3, (int)$server['stars']); $star++): ?>
+                                        <i class="fas fa-star"></i>
+                                    <?php endfor; ?>
+                                </span>
+                            <?php endif; ?>
                         </h3>
                         <div class="server-meta">
                             <?php if ($server['is_online'] ?? false): ?>

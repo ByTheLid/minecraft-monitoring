@@ -29,6 +29,39 @@
             </div>
 
             <hr class="mb-2">
+            <h3 class="section-title mb-2">Public Profile</h3>
+
+            <div class="form-group mb-2">
+                <label>Design Theme</label>
+                <select name="design_preference" class="form-control">
+                    <option value="aesthetic" <?= ($user['design_preference'] ?? '') === 'aesthetic' ? 'selected' : '' ?>>Aesthetic (Modern & Beautiful)</option>
+                    <option value="lightweight" <?= ($user['design_preference'] ?? '') === 'lightweight' ? 'selected' : '' ?>>Lightweight (Fast & Simple)</option>
+                </select>
+                <small class="text-muted">Choose your preferred visual style for the platform.</small>
+            </div>
+
+            <div class="form-group mb-2">
+                <label>Bio / About Me</label>
+                <textarea name="bio" class="form-control" rows="3" placeholder="Tell the community about yourself..."><?= e($user['bio'] ?? '') ?></textarea>
+            </div>
+
+            <div class="form-group mb-2">
+                <label>Discord Username</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fab fa-discord"></i></span>
+                    <input type="text" name="social_discord" class="form-control" value="<?= e($user['social_discord'] ?? '') ?>" placeholder="username">
+                </div>
+            </div>
+
+            <div class="form-group mb-2">
+                <label>Telegram</label>
+                <div class="input-group">
+                    <span class="input-group-text"><i class="fab fa-telegram"></i></span>
+                    <input type="text" name="social_telegram" class="form-control" value="<?= e($user['social_telegram'] ?? '') ?>" placeholder="t.me/username">
+                </div>
+            </div>
+
+            <hr class="mb-2">
             <h3 class="section-title mb-2">Change Password</h3>
 
             <div class="form-group mb-2">
