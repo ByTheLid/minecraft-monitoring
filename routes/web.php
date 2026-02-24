@@ -49,6 +49,10 @@ $router->get('/register', [AuthController::class, 'registerForm']);
 $router->post('/register', [AuthController::class, 'register'], [CsrfMiddleware::class]);
 $router->post('/logout', [AuthController::class, 'logout'], [CsrfMiddleware::class]);
 
+// 2FA Verification (public — during login)
+$router->get('/2fa/verify', [\App\Controllers\TwoFactorController::class, 'verifyForm']);
+$router->post('/2fa/verify', [\App\Controllers\TwoFactorController::class, 'verify'], [CsrfMiddleware::class]);
+
 // Password Reset
 $router->get('/forgot-password', [AuthController::class, 'forgotPasswordForm']);
 $router->post('/forgot-password', [AuthController::class, 'sendResetLink'], [CsrfMiddleware::class]);
@@ -73,6 +77,11 @@ $router->group('/dashboard', function ($router) {
     $router->get('/api-keys', [DashboardController::class, 'apiKeys']);
     $router->post('/api-keys/generate', [DashboardController::class, 'generateApiKey']);
     $router->post('/api-keys/revoke', [DashboardController::class, 'revokeApiKey']);
+
+    // Two-Factor Authentication
+    $router->get('/2fa/setup', [\App\Controllers\TwoFactorController::class, 'setup']);
+    $router->post('/2fa/enable', [\App\Controllers\TwoFactorController::class, 'enable']);
+    $router->post('/2fa/disable', [\App\Controllers\TwoFactorController::class, 'disable']);
 }, [AuthMiddleware::class, CsrfMiddleware::class]);
 
 // Admin (admin required)

@@ -37,6 +37,16 @@ class AuthController extends Controller
             return $this->redirect('/login');
         }
 
+        // Check if 2FA is enabled — intercept login
+        if (!empty($user['two_factor_enabled'])) {
+            // Unset the session that AuthService::attempt() just created
+            unset($_SESSION['user']);
+            // Store pending user ID for 2FA verification
+            $_SESSION['2fa_pending_user_id'] = $user['id'];
+
+            return $this->redirect('/2fa/verify');
+        }
+
         unset($_SESSION['_old_input']);
         flash('success', 'Welcome back, ' . e($user['username']) . '!');
         return $this->redirect('/dashboard');
