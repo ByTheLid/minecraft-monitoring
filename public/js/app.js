@@ -276,3 +276,22 @@ function formatNumber(num) {
     if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
     return String(num);
 }
+
+// ==========================================
+// Global Modal Close Handlers
+// ==========================================
+// Close modal on backdrop click (applies to ALL .modal-backdrop elements)
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-backdrop') && e.target.classList.contains('active')) {
+        e.target.classList.remove('active');
+    }
+});
+
+// Close all active modals on Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-backdrop.active').forEach(function(m) {
+            m.classList.remove('active');
+        });
+    }
+});

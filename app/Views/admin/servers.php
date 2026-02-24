@@ -175,23 +175,24 @@ function openTools(id, name) {
     document.getElementById('boostPackageSelect').value = 'custom';
     toggleCustomBoostFields();
 
-    document.getElementById('toolsModal').style.display = 'flex';
+    document.getElementById('toolsModal').classList.add('active');
 }
 function closeToolsModal() {
-    document.getElementById('toolsModal').style.display = 'none';
+    document.getElementById('toolsModal').classList.remove('active');
 }
 
 // Close modals when clicking outside or pressing Escape
 window.addEventListener('click', function(event) {
-    var toolsModal = document.getElementById('toolsModal');
-    if (event.target === toolsModal) {
-        closeToolsModal();
+    if (event.target.classList.contains('modal-backdrop') && event.target.classList.contains('active')) {
+        event.target.classList.remove('active');
     }
 });
 
 window.addEventListener('keydown', function(event) {
     if (event.key === 'Escape') {
-        closeToolsModal();
+        document.querySelectorAll('.modal-backdrop.active').forEach(function(m) {
+            m.classList.remove('active');
+        });
     }
 });
 </script>
