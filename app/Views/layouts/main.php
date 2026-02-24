@@ -56,7 +56,7 @@
                     <?php if (is_admin()): ?>
                         <a href="/admin" class="btn btn-sm btn-gold"><i class="fas fa-cogs"></i> Admin</a>
                     <?php endif; ?>
-                    <a href="/logout" class="btn btn-sm btn-danger"><i class="fas fa-sign-out-alt"></i> Exit</a>
+                    <form action="/logout" method="POST" style="display:inline;"><?= csrf_field() ?><button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-sign-out-alt"></i> Exit</button></form>
                 <?php else: ?>
                     <a href="/login" class="btn btn-sm btn-secondary">Login</a>
                     <a href="/register" class="btn btn-sm btn-primary">Register</a>

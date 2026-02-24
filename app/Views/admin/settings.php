@@ -1,7 +1,5 @@
 <?php $layout = 'admin'; $adminPage = 'settings'; $pageTitle = 'Settings'; ?>
 
-<?php $layout = 'admin'; $adminPage = 'settings'; $pageTitle = 'Settings'; ?>
-
 <style>
     .settings-tabs { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
     .settings-tab { padding: 10px 20px; cursor: pointer; border-bottom: 2px solid transparent; color: var(--text-secondary); }
@@ -34,6 +32,7 @@
             <div class="settings-tab" data-tab="socials">Socials & Contacts</div>
             <div class="settings-tab" data-tab="assets">Assets</div>
             <div class="settings-tab" data-tab="email">Email (SMTP)</div>
+            <div class="settings-tab" data-tab="gamification">Gamification</div>
         </div>
 
         <!-- General Tab -->
@@ -168,6 +167,48 @@
                         <input type="text" name="smtp_from_name" class="form-control" value="<?= e($vals['smtp_from_name'] ?? 'MC Monitoring') ?>" placeholder="MC Monitoring">
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <?php 
+            $caps = setting_json('gamification_action_caps', ['vote'=>3, 'review'=>1, 'daily_login'=>1]);
+            $points = setting_json('gamification_points_per_action', ['vote'=>10, 'review'=>25, 'daily_login'=>5, 'add_server'=>50, 'buy_boost'=>100]);
+            $ranks = setting_json('gamification_rank_thresholds', [0=>'Novice', 100=>'Bronze', 500=>'Silver', 1500=>'Gold', 5000=>'Diamond', 10000=>'Legendary']);
+            ksort($ranks, SORT_NUMERIC);
+        ?>
+        <!-- Gamification Tab -->
+        <div id="gamification" class="settings-content">
+            <div class="form-section">
+                <h3 class="section-title mb-2">Points Per Action</h3>
+                <div class="grid-2">
+                    <div class="form-group mb-2"><label>Vote</label><input type="number" name="gamification_points_per_action[vote]" class="form-control" value="<?= e($points['vote'] ?? '10') ?>"></div>
+                    <div class="form-group mb-2"><label>Review</label><input type="number" name="gamification_points_per_action[review]" class="form-control" value="<?= e($points['review'] ?? '25') ?>"></div>
+                    <div class="form-group mb-2"><label>Daily Login</label><input type="number" name="gamification_points_per_action[daily_login]" class="form-control" value="<?= e($points['daily_login'] ?? '5') ?>"></div>
+                    <div class="form-group mb-2"><label>Add Server</label><input type="number" name="gamification_points_per_action[add_server]" class="form-control" value="<?= e($points['add_server'] ?? '50') ?>"></div>
+                    <div class="form-group mb-2"><label>Buy Boost</label><input type="number" name="gamification_points_per_action[buy_boost]" class="form-control" value="<?= e($points['buy_boost'] ?? '100') ?>"></div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title mb-2">Action Daily Caps</h3>
+                <div class="grid-2">
+                    <div class="form-group mb-2"><label>Vote Cap</label><input type="number" name="gamification_action_caps[vote]" class="form-control" value="<?= e($caps['vote'] ?? '3') ?>"></div>
+                    <div class="form-group mb-2"><label>Review Cap</label><input type="number" name="gamification_action_caps[review]" class="form-control" value="<?= e($caps['review'] ?? '1') ?>"></div>
+                    <div class="form-group mb-2"><label>Daily Login Cap</label><input type="number" name="gamification_action_caps[daily_login]" class="form-control" value="<?= e($caps['daily_login'] ?? '1') ?>"></div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <h3 class="section-title mb-2">Rank Thresholds</h3>
+                <div class="grid-2" id="rankThresholdsContainer">
+                    <?php foreach ($ranks as $threshold => $name): ?>
+                        <div class="form-group mb-2">
+                            <label>Threshold <?= e($threshold) ?> points</label>
+                            <input type="text" name="gamification_rank_thresholds[<?= e($threshold) ?>]" class="form-control" value="<?= e($name) ?>">
+                        </div>
+                    <?php endforeach; ?>
+                </div>
+                <div class="form-text">Note: Changing threshold keys dynamically requires modifying the code below. Currently editing names for existing thresholds.</div>
             </div>
         </div>
 

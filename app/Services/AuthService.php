@@ -40,6 +40,9 @@ class AuthService
             'samesite' => 'Strict',
         ]);
 
+        // Regenerate session ID to prevent session fixation
+        session_regenerate_id(true);
+
         // Store in PHP session
         $_SESSION['user'] = [
             'id' => $user['id'],

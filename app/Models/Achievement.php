@@ -6,37 +6,27 @@ use App\Core\Database;
 
 class Achievement
 {
-    // Dictionary of available achievements
-    public const BADGES = [
-        'first_vote' => [
-            'key' => 'first_vote',
-            'title' => 'First Blood',
-            'description' => 'Voted for a server for the first time.',
-            'icon' => 'fa-solid fa-hand-pointer',
-            'color' => '#10b981' // Green
-        ],
-        'server_owner' => [
-            'key' => 'server_owner',
-            'title' => 'Server Owner',
-            'description' => 'Added a server to the monitoring list.',
-            'icon' => 'fa-solid fa-server',
-            'color' => '#3b82f6' // Blue
-        ],
-        'supporter' => [
-            'key' => 'supporter',
-            'title' => 'Supporter',
-            'description' => 'Purchased a boost package.',
-            'icon' => 'fa-solid fa-heart',
-            'color' => '#ef4444' // Red
-        ]
-    ];
+    public static function getByKey(string $key): ?array
+    {
+        $stmt = Database::getInstance()->prepare("SELECT * FROM achievements WHERE achievement_key = ?");
+        $stmt->execute([$key]);
+        $row = $stmt->fetch();
+        return $row ?: null;
+    }
+
+    public static function getAll(): array
+    {
+        $stmt = Database::getInstance()->query("SELECT * FROM achievements ORDER BY id ASC");
+        return $stmt->fetchAll();
+    }
 
     /**
      * Unlocks an achievement for a user
      */
     public static function unlock(int $userId, string $key): bool
     {
-        if (!isset(self::BADGES[$key])) {
+        $badge = self::getByKey($key);
+        if (!$badge) {
             return false;
         }
 
@@ -58,23 +48,21 @@ class Achievement
     public static function getForUser(int $userId): array
     {
         $stmt = Database::getInstance()->prepare("
-            SELECT achievement_key, unlocked_at 
-            FROM user_achievements 
-            WHERE user_id = ?
-            ORDER BY unlocked_at DESC
+            SELECT ua.unlocked_at, a.* 
+            FROM user_achievements ua 
+            JOIN achievements a ON a.achievement_key = ua.achievement_key
+            WHERE ua.user_id = ?
+            ORDER BY ua.unlocked_at DESC
         ");
         $stmt->execute([$userId]);
         $unlocked = $stmt->fetchAll();
 
-        // Map database keys to full badge details
+        // Ensure backward compatibility with array keys
         $result = [];
         foreach ($unlocked as $row) {
-            $key = $row['achievement_key'];
-            if (isset(self::BADGES[$key])) {
-                $badge = self::BADGES[$key];
-                $badge['unlocked_at'] = $row['unlocked_at'];
-                $result[] = $badge;
-            }
+            $row['title'] = $row['name']; // map name to title for existing views
+            $row['key'] = $row['achievement_key'];
+            $result[] = $row;
         }
 
         return $result;

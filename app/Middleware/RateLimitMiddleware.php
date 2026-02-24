@@ -25,28 +25,30 @@ class RateLimitMiddleware
         try {
             $db = Database::getInstance();
 
-            // Clean expired entries
-            $db->prepare("DELETE FROM rate_limits WHERE expires_at < NOW()")->execute();
+            // Probabilistic cleanup (1% of requests) instead of every request
+            if (random_int(1, 100) === 1) {
+                $db->prepare("DELETE FROM rate_limits WHERE expires_at < NOW()")->execute();
+            }
 
-            // Check current count
-            $stmt = $db->prepare("SELECT hits FROM rate_limits WHERE `key` = ?");
+            // Atomic upsert — no race condition
+            $db->prepare("
+                INSERT INTO rate_limits (`key`, hits, expires_at) 
+                VALUES (?, 1, DATE_ADD(NOW(), INTERVAL ? SECOND))
+                ON DUPLICATE KEY UPDATE hits = IF(expires_at >= NOW(), hits + 1, 1),
+                    expires_at = IF(expires_at >= NOW(), expires_at, DATE_ADD(NOW(), INTERVAL ? SECOND))
+            ")->execute([$key, $this->windowSeconds, $this->windowSeconds]);
+
+            // Check if over limit
+            $stmt = $db->prepare("SELECT hits FROM rate_limits WHERE `key` = ? AND expires_at >= NOW()");
             $stmt->execute([$key]);
             $row = $stmt->fetch();
 
-            if ($row && $row['hits'] >= $this->maxRequests) {
+            if ($row && $row['hits'] > $this->maxRequests) {
                 $response = new Response();
                 return $response->json([
                     'success' => false,
                     'error' => ['code' => 'RATE_LIMIT', 'message' => 'Too many requests']
                 ], 429);
-            }
-
-            if ($row) {
-                $db->prepare("UPDATE rate_limits SET hits = hits + 1 WHERE `key` = ?")->execute([$key]);
-            } else {
-                $db->prepare(
-                    "INSERT INTO rate_limits (`key`, hits, expires_at) VALUES (?, 1, DATE_ADD(NOW(), INTERVAL ? SECOND))"
-                )->execute([$key, $this->windowSeconds]);
             }
         } catch (\Throwable $e) {
             // If rate_limits table doesn't exist yet, skip

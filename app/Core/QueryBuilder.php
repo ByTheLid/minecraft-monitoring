@@ -20,9 +20,21 @@ class QueryBuilder
         $this->pdo = $pdo;
     }
 
+    /**
+     * Validate SQL identifier (table/column name) to prevent injection.
+     */
+    protected function validateIdentifier(string $id): string
+    {
+        // Allow word chars and dots (for table.column)
+        if (!preg_match('/^[a-zA-Z_][a-zA-Z0-9_.]*$/', $id)) {
+            throw new \InvalidArgumentException("Invalid SQL identifier: {$id}");
+        }
+        return $id;
+    }
+
     public function table(string $table): self
     {
-        $this->table = $table;
+        $this->table = $this->validateIdentifier($table);
         return $this;
     }
 
@@ -37,6 +49,13 @@ class QueryBuilder
         if (func_num_args() === 2) {
             $value = $operator;
             $operator = '=';
+        }
+
+        $this->validateIdentifier($column);
+
+        $allowedOperators = ['=', '!=', '<', '>', '<=', '>=', 'LIKE', 'NOT LIKE', 'IN', 'NOT IN', 'IS', 'IS NOT'];
+        if (!in_array(strtoupper($operator), $allowedOperators)) {
+            throw new \InvalidArgumentException("Invalid SQL operator: {$operator}");
         }
 
         $this->wheres[] = [
@@ -58,6 +77,8 @@ class QueryBuilder
             $value = $operator;
             $operator = '=';
         }
+
+        $this->validateIdentifier($column);
 
         $this->wheres[] = [
             'type' => 'Basic',
@@ -87,6 +108,8 @@ class QueryBuilder
 
     public function orderBy(string $column, string $direction = 'asc'): self
     {
+        $this->validateIdentifier($column);
+
         $this->orders[] = [
             'column' => $column,
             'direction' => strtoupper($direction) === 'DESC' ? 'DESC' : 'ASC',
@@ -124,18 +147,25 @@ class QueryBuilder
     public function count(): int
     {
         $originalSelects = $this->selects;
+        $originalLimit = $this->limit;
+        $originalOffset = $this->offset;
+
         $this->selects = ['COUNT(*) as count'];
-        
         $result = $this->first();
-        
-        $this->selects = $originalSelects; // Restore
-        
+
+        // Restore full state after count
+        $this->selects = $originalSelects;
+        $this->limit = $originalLimit;
+        $this->offset = $originalOffset;
+
         return (int) ($result['count'] ?? 0);
     }
 
     public function insert(array $values): int
     {
-        $columns = implode(', ', array_keys($values));
+        // Validate all column names
+        $validatedColumns = array_map(fn($col) => $this->validateIdentifier($col), array_keys($values));
+        $columns = implode(', ', $validatedColumns);
         $placeholders = implode(', ', array_fill(0, count($values), '?'));
 
         $sql = "INSERT INTO {$this->table} ({$columns}) VALUES ({$placeholders})";
@@ -148,15 +178,13 @@ class QueryBuilder
 
     public function update(array $values): bool
     {
-        $sets = implode(', ', array_map(fn($col) => "{$col} = ?", array_keys($values)));
+        $validatedKeys = array_map(fn($col) => $this->validateIdentifier($col), array_keys($values));
+        $sets = implode(', ', array_map(fn($col) => "{$col} = ?", $validatedKeys));
         
-        // Build where clause manually for update
         $whereSql = $this->compileWheres();
         
         if (empty($whereSql)) {
-             // Safety: prevent updating all rows without where clause, unless explicitly intended?
-             // For now, let's allow it but it's risky. But typically update is called on an ID.
-             // Or we force a where clause.
+            throw new \RuntimeException('UPDATE without WHERE clause is not allowed. Use whereRaw("1=1") to update all rows explicitly.');
         }
 
         $sql = "UPDATE {$this->table} SET {$sets} {$whereSql}";
@@ -171,6 +199,11 @@ class QueryBuilder
     public function delete(): bool
     {
         $whereSql = $this->compileWheres();
+
+        if (empty($whereSql)) {
+            throw new \RuntimeException('DELETE without WHERE clause is not allowed. Use whereRaw("1=1") to delete all rows explicitly.');
+        }
+
         $sql = "DELETE FROM {$this->table} {$whereSql}";
         
         $stmt = $this->pdo->prepare($sql);

@@ -269,18 +269,18 @@ function openEditModal(pkg) {
     document.getElementById('edit_border').checked = pkg.has_border == 1;
     document.getElementById('edit_bg').checked = pkg.has_bg_color == 1;
 
-    document.getElementById('editModal').style.display = 'flex';
+    document.getElementById('editModal').classList.add('active');
 }
 function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
+    document.getElementById('editModal').classList.remove('active');
 }
 
 function openDeleteModal(id) {
     document.getElementById('deleteForm').action = '/admin/boost/delete/' + id;
-    document.getElementById('deleteModal').style.display = 'flex';
+    document.getElementById('deleteModal').classList.add('active');
 }
 function closeDeleteModal() {
-    document.getElementById('deleteModal').style.display = 'none';
+    document.getElementById('deleteModal').classList.remove('active');
 }
 
 // Close modals when clicking outside or pressing Escape

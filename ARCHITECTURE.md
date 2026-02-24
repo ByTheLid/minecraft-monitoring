@@ -73,13 +73,41 @@ flash('error', 'У вас недостаточно средств.');
 - Идентификаторы (id) модалок должны начинаться с `...Modal` (например, `voteModal`).
 - Закрытие должно происходить по клику на фон (Overlay) и на клавишу ESC (уже вшито в `public/js/app.js`).
 
+### Выбор иконок (FontAwesome Picker)
+Для переиспользования компонента выбора иконок (FontAwesome), используйте `FontAwesomePicker`. Скрипт сам найдет элемент по классу `.icon-picker` и инициализируется.
+Пример HTML структуры:
+```html
+<div class="form-group">
+    <label>Icon</label>
+    <div class="icon-picker" data-target="#icon_input_id" data-current="fa-solid fa-star"></div>
+    <input type="hidden" name="icon" id="icon_input_id" value="fa-solid fa-star">
+</div>
+```
+*Компонент поддерживает поиск по иконкам, визуальный предпросмотр и авто-комплит в скрытый input.*
+
 ### Глобальные настройки (Settings)
 Настройки сайта (Название, Логотип, SEO ключи) хранятся в БД.
 Вызываются во View через глобальный хелпер:
 ```php
-<title><?= setting('site_name', 'Default Name') ?></title>
-<img src="<?= setting('site_logo') ?>" alt="Logo">
+<?= setting('site_name', 'Default Name') ?>
 ```
+Для JSON-настроек (геймификация и др.) используйте `setting_json()`:
+```php
+$caps = setting_json('gamification_action_caps', ['vote' => 3]);
+```
+
+---
+
+## 🔐 Безопасность (Security Conventions)
+
+- **QueryBuilder** автоматически валидирует имена таблиц, колонок и SQL-операторов. Невалидные идентификаторы вызывают `InvalidArgumentException`.
+- **UPDATE/DELETE без WHERE** запрещены на уровне QueryBuilder. Для массовых операций используйте `->whereRaw('1=1')`.
+- **IP-адрес клиента** (`Request::ip()`) доверяет proxy-заголовкам (`X-Forwarded-For`, `X-Real-IP`) **только** от `127.0.0.1` / `::1`. На production за nginx/cloudflare это корректно.
+- **CSRF токен** ротируется после каждой успешной проверки (replay protection).
+- **Logout** работает через `POST /logout` с CSRF-токеном (защита от CSRF через `<img>`).
+- **JSON body** ограничен 2 МБ для предотвращения OOM-атак.
+- **Session ID** регенерируется при логине (`session_regenerate_id(true)`) для предотвращения Session Fixation.
+- **Rate Limiting** использует атомарный `INSERT ... ON DUPLICATE KEY UPDATE` (без race condition).
 
 ---
 

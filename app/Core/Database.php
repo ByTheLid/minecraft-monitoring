@@ -12,16 +12,10 @@ class Database
     public static function getInstance(): PDO
     {
         if (self::$instance === null) {
-            // Default path (when running via index.php)
             $configPath = dirname(__DIR__, 2) . '/config/database.php';
-            
+
             if (!file_exists($configPath)) {
-                // Fallback for CLI from root
-                $configPath = __DIR__ . '/../../config/database.php';
-            }
-            
-            if (!file_exists($configPath)) {
-                 $configPath = 'c:/laragon/www/minecraft-monitoring/config/database.php';
+                throw new \RuntimeException("Database config not found at: {$configPath}");
             }
 
             $config = require $configPath;

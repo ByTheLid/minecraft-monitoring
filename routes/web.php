@@ -44,7 +44,7 @@ $router->get('/login', [AuthController::class, 'loginForm']);
 $router->post('/login', [AuthController::class, 'login'], [CsrfMiddleware::class]);
 $router->get('/register', [AuthController::class, 'registerForm']);
 $router->post('/register', [AuthController::class, 'register'], [CsrfMiddleware::class]);
-$router->get('/logout', [AuthController::class, 'logout']);
+$router->post('/logout', [AuthController::class, 'logout'], [CsrfMiddleware::class]);
 
 // Password Reset
 $router->get('/forgot-password', [AuthController::class, 'forgotPasswordForm']);
@@ -110,5 +110,11 @@ $router->group('/admin', function ($router) {
     $router->post('/boost/delete/{id}', [AdminBoostController::class, 'delete']);
     $router->post('/boost/activate/{id}', [AdminBoostController::class, 'activate']);
     $router->post('/boost/deactivate/{id}', [AdminBoostController::class, 'deactivate']);
+
+    // Achievements CRUD
+    $router->get('/achievements', [\App\Controllers\Admin\AchievementController::class, 'index']);
+    $router->post('/achievements/create', [\App\Controllers\Admin\AchievementController::class, 'create']);
+    $router->post('/achievements/edit/{id}', [\App\Controllers\Admin\AchievementController::class, 'edit']);
+    $router->post('/achievements/delete/{id}', [\App\Controllers\Admin\AchievementController::class, 'delete']);
 
 }, [AuthMiddleware::class, AdminMiddleware::class, CsrfMiddleware::class]);

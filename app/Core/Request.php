@@ -28,8 +28,19 @@ class Request
         if ($this->method === 'POST' || $this->method === 'PUT' || $this->method === 'DELETE') {
             $contentType = $_SERVER['CONTENT_TYPE'] ?? '';
             if (str_contains($contentType, 'application/json')) {
-                $raw = file_get_contents('php://input');
-                $this->body = json_decode($raw, true) ?: [];
+                // Limit JSON body size to 2MB to prevent memory exhaustion
+                $maxBodySize = 2 * 1024 * 1024;
+                $contentLength = (int) ($_SERVER['CONTENT_LENGTH'] ?? 0);
+                if ($contentLength > $maxBodySize) {
+                    $this->body = [];
+                } else {
+                    $raw = file_get_contents('php://input', false, null, 0, $maxBodySize + 1);
+                    if (strlen($raw) > $maxBodySize) {
+                        $this->body = [];
+                    } else {
+                        $this->body = json_decode($raw, true) ?: [];
+                    }
+                }
             } else {
                 $this->body = $_POST;
                 // For PUT/DELETE with form data
@@ -104,12 +115,24 @@ class Request
         return $this->files[$key] ?? null;
     }
 
+    /**
+     * Get client IP. Only trusts proxy headers from known reverse proxies.
+     */
     public function ip(): string
     {
-        return $this->server['HTTP_X_FORWARDED_FOR']
-            ?? $this->server['HTTP_X_REAL_IP']
-            ?? $this->server['REMOTE_ADDR']
-            ?? '0.0.0.0';
+        $trustedProxies = ['127.0.0.1', '::1'];
+        $remoteAddr = $this->server['REMOTE_ADDR'] ?? '0.0.0.0';
+
+        if (in_array($remoteAddr, $trustedProxies, true)) {
+            $forwarded = $this->server['HTTP_X_FORWARDED_FOR'] ?? '';
+            if ($forwarded) {
+                // First IP in chain is the original client
+                return trim(explode(',', $forwarded)[0]);
+            }
+            return $this->server['HTTP_X_REAL_IP'] ?? $remoteAddr;
+        }
+
+        return $remoteAddr;
     }
 
     public function userAgent(): string

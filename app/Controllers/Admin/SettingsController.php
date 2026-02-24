@@ -33,6 +33,18 @@ class SettingsController extends Controller
             }
         }
 
+        $jsonKeys = [
+            'gamification_action_caps',
+            'gamification_points_per_action',
+            'gamification_rank_thresholds'
+        ];
+        foreach ($jsonKeys as $key) {
+            $value = $request->input($key);
+            if ($value !== null && is_array($value)) {
+                Setting::set($key, json_encode($value));
+            }
+        }
+
         flash('success', 'Settings updated.');
         return $this->redirect('/admin/settings');
     }

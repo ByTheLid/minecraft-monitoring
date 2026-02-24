@@ -44,9 +44,9 @@ function redirect(string $url): void
     exit;
 }
 
-function e(string $value): string
+function e(?string $value): string
 {
-    return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    return htmlspecialchars($value ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 
 function csrf_token(): string
@@ -69,7 +69,12 @@ function csrf_field(): string
 
 function csrf_verify(string $token): bool
 {
-    return hash_equals(csrf_token(), $token);
+    $valid = hash_equals(csrf_token(), $token);
+    if ($valid) {
+        // Rotate token after successful verification to prevent replay attacks
+        unset($_SESSION['csrf_token']);
+    }
+    return $valid;
 }
 
 function flash(string $key, mixed $value = null): mixed
@@ -167,4 +172,15 @@ function setting(string $key, mixed $default = null): mixed
     }
     
     return $settings[$key] ?? $default;
+}
+
+/**
+ * Decode a JSON setting value with a fallback default.
+ */
+function setting_json(string $key, array $default = []): array
+{
+    $val = setting($key, '');
+    if (empty($val)) return $default;
+    $decoded = json_decode($val, true);
+    return is_array($decoded) ? $decoded : $default;
 }

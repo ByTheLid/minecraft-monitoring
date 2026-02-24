@@ -22,7 +22,7 @@
             </a>
             <div class="navbar-right" style="display: flex; align-items: center; gap: 10px;">
                 <a href="/" class="btn btn-sm btn-secondary"><i class="fas fa-external-link-alt"></i> View Site</a>
-                <a href="/logout" class="btn btn-sm btn-danger"><i class="fas fa-sign-out-alt"></i> Exit</a>
+                <form action="/logout" method="POST" style="display:inline;"><?= csrf_field() ?><button type="submit" class="btn btn-sm btn-danger"><i class="fas fa-sign-out-alt"></i> Exit</button></form>
             </div>
         </div>
     </nav>
@@ -36,6 +36,7 @@
             <a href="/admin/posts" class="<?= ($adminPage ?? '') === 'posts' ? 'active' : '' ?>"><i class="fas fa-newspaper"></i> Posts</a>
             <a href="/admin/analytics" class="<?= ($adminPage ?? '') === 'analytics' ? 'active' : '' ?>"><i class="fas fa-chart-line"></i> Analytics</a>
             <a href="/admin/boost" class="<?= ($adminPage ?? '') === 'boost' ? 'active' : '' ?>"><i class="fas fa-rocket"></i> Boost</a>
+            <a href="/admin/achievements" class="<?= ($adminPage ?? '') === 'achievements' ? 'active' : '' ?>"><i class="fas fa-medal"></i> Achievements</a>
             <a href="/admin/settings" class="<?= ($adminPage ?? '') === 'settings' ? 'active' : '' ?>"><i class="fas fa-cog"></i> Settings</a>
         </aside>
 
@@ -60,6 +61,7 @@
     </div>
 
     <script src="/js/app.js"></script>
+    <script src="/js/icon-picker.js"></script>
     <?php if (isset($extraJs) && is_array($extraJs)): ?>
         <?php foreach ($extraJs as $js): ?>
             <script src="<?= $js ?>"></script>
