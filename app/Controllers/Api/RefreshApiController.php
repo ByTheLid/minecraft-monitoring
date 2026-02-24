@@ -28,23 +28,21 @@ class RefreshApiController extends Controller
         $lastGlobal = (int) Setting::get('last_refresh_time', '0');
 
         if ($force) {
-            // Per-IP rate limit: 30 seconds
+            // Per-IP rate limit: 60 seconds
             $lastIp = (int) Setting::get("last_refresh_ip_{$ip}", '0');
-            if ($now - $lastIp < 30) {
+            if ($now - $lastIp < 60) {
                 return $this->success([
                     'refreshed' => false,
                     'reason' => 'rate_limited',
-                    'retry_after' => 30 - ($now - $lastIp),
+                    'retry_after' => 60 - ($now - $lastIp),
                 ]);
             }
             Setting::set("last_refresh_ip_{$ip}", (string) $now);
 
-            // Trigger background ping if global cooldown passed
-            if ($now - $lastGlobal >= 60) {
-                $pingTriggered = $this->triggerBackgroundPing();
-                if ($pingTriggered) {
-                    Setting::set('last_refresh_time', (string) $now);
-                }
+            // Force always triggers a ping, bypassing global cooldown
+            $pingTriggered = $this->triggerBackgroundPing();
+            if ($pingTriggered) {
+                Setting::set('last_refresh_time', (string) $now);
             }
         } else {
             // Auto-refresh: trigger background ping if >60s since last

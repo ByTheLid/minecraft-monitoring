@@ -101,7 +101,7 @@ $runPingCycle = function() use ($pinger, &$isRunning, $chunkSize, $updateStatus)
                 function(array $results) use ($processChunk, $index, $db, $chunk) {
                     // $results is array of [server_id => ping_result]
                     $onlineCount = 0;
-                    $sqlCache = "INSERT INTO server_status_cache (server_id, is_online, players_online, players_max, version, ping_ms, last_checked_at) VALUES ";
+                    $sqlCache = "INSERT INTO server_status_cache (server_id, is_online, players_online, players_max, version, ping_ms, motd, favicon_base64, last_checked_at) VALUES ";
                     $valuesCache = [];
                     $paramsCache = [];
 
@@ -112,15 +112,17 @@ $runPingCycle = function() use ($pinger, &$isRunning, $chunkSize, $updateStatus)
                     foreach ($results as $serverId => $res) {
                         if ($res['is_online']) $onlineCount++;
                         
-                        // Cache update
-                        $valuesCache[] = "(?, ?, ?, ?, ?, ?, NOW())";
+                        // Cache update (includes motd + favicon)
+                        $valuesCache[] = "(?, ?, ?, ?, ?, ?, ?, ?, NOW())";
                         array_push($paramsCache, 
                             $serverId, 
                             $res['is_online'] ? 1 : 0, 
                             $res['players_online'], 
                             $res['players_max'], 
                             $res['version'] ?? '', 
-                            $res['ping_ms'] ?? 0
+                            $res['ping_ms'] ?? 0,
+                            $res['motd'] ?? '',
+                            $res['favicon'] ?? null
                         );
 
                         // History Stats update
@@ -145,6 +147,8 @@ $runPingCycle = function() use ($pinger, &$isRunning, $chunkSize, $updateStatus)
                             players_max = VALUES(players_max),
                             version = VALUES(version),
                             ping_ms = VALUES(ping_ms),
+                            motd = VALUES(motd),
+                            favicon_base64 = VALUES(favicon_base64),
                             last_checked_at = NOW()";
 
                         $stmtCache = $db->prepare($sqlCache);

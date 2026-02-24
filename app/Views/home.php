@@ -111,7 +111,7 @@
 <script>
 (function() {
     const COOLDOWN_AUTO = 60;
-    const COOLDOWN_MANUAL = 30;
+    const COOLDOWN_MANUAL = 60;
 
     function renderServerCard(s, rank) {
         const isOnline = (s.is_online == 1 || s.is_online === true || s.is_online === "1");
