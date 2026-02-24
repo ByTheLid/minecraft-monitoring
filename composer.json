@@ -4,7 +4,11 @@
     "type": "project",
     "require": {
         "php": ">=8.2",
-        "phpmailer/phpmailer": "^7.0"
+        "phpmailer/phpmailer": "^7.0",
+        "react/event-loop": "^1.6",
+        "react/socket": "^1.17",
+        "react/mysql": "^0.6.0",
+        "react/promise": "^3.3"
     },
     "autoload": {
         "psr-4": {

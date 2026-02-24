@@ -1,0 +1,160 @@
+<?php
+
+require __DIR__ . '/../vendor/autoload.php';
+
+use React\EventLoop\Loop;
+use React\Socket\Connector;
+use React\Promise\Promise;
+use App\Core\Env;
+use App\Core\Database;
+use App\Services\AsyncMinecraftPing;
+
+Env::load(__DIR__ . '/../.env');
+
+echo "[Daemon] Starting High-Performance ReactPHP Ping Service...\n";
+
+$connector = new Connector([
+    'timeout' => 5.0
+]);
+$pinger = new AsyncMinecraftPing($connector, 5.0);
+
+// Concurrency settings
+$chunkSize = 250; 
+$cronIntervalSeconds = 180; // 3 minutes
+
+$isRunning = false;
+
+$runPingCycle = function() use ($pinger, &$isRunning, $chunkSize) {
+    if ($isRunning) {
+        echo "[Daemon] Warning: Previous cycle is still running. Skipping this tick.\n";
+        return;
+    }
+    
+    $isRunning = true;
+    echo "[Daemon] [" . date('Y-m-d H:i:s') . "] Starting ping cycle...\n";
+    $startTime = microtime(true);
+
+    try {
+        $db = Database::getInstance();
+        $stmt = $db->query("SELECT id, ip, port FROM servers WHERE is_approved = 1");
+        $servers = $stmt->fetchAll(PDO::FETCH_ASSOC);
+        
+        $total = count($servers);
+        echo "[Daemon] Found {$total} servers to ping.\n";
+
+        if ($total === 0) {
+            $isRunning = false;
+            return;
+        }
+
+        $chunks = array_chunk($servers, $chunkSize);
+        $processChunk = function(int $index) use (&$processChunk, $chunks, $pinger, &$isRunning, $startTime, $total, $db) {
+            if (!isset($chunks[$index])) {
+                // All chunks done
+                $elapsed = round(microtime(true) - $startTime, 2);
+                echo "[Daemon] [" . date('Y-m-d H:i:s') . "] Cycle finished. Total servers: {$total}, Time: {$elapsed}s\n";
+                $isRunning = false;
+                return;
+            }
+
+            $chunk = $chunks[$index];
+            $promises = [];
+
+            foreach ($chunk as $server) {
+                $promises[$server['id']] = $pinger->ping(trim($server['ip']), (int)trim($server['port']));
+            }
+
+            \React\Promise\all($promises)->then(
+                function(array $results) use ($processChunk, $index, $db, $chunk) {
+                    // $results is array of [server_id => ping_result]
+                    $onlineCount = 0;
+                    $sqlCache = "INSERT INTO server_status_cache (server_id, is_online, players_online, players_max, version, ping_ms, last_checked_at) VALUES ";
+                    $valuesCache = [];
+                    $paramsCache = [];
+
+                    $sqlStats = "INSERT INTO server_stats (server_id, is_online, players_online, players_max, version, ping_ms, motd, checked_at) VALUES ";
+                    $valuesStats = [];
+                    $paramsStats = [];
+
+                    foreach ($results as $serverId => $res) {
+                        if ($res['is_online']) $onlineCount++;
+                        
+                        // Cache update
+                        $valuesCache[] = "(?, ?, ?, ?, ?, ?, NOW())";
+                        array_push($paramsCache, 
+                            $serverId, 
+                            $res['is_online'] ? 1 : 0, 
+                            $res['players_online'], 
+                            $res['players_max'], 
+                            $res['version'] ?? '', 
+                            $res['ping_ms'] ?? 0
+                        );
+
+                        // History Stats update
+                        $valuesStats[] = "(?, ?, ?, ?, ?, ?, ?, NOW())";
+                        array_push($paramsStats,
+                            $serverId,
+                            $res['is_online'] ? 1 : 0,
+                            $res['players_online'],
+                            $res['players_max'],
+                            $res['version'] ?? '',
+                            $res['ping_ms'] ?? 0,
+                            $res['motd'] ?? ''
+                        );
+                    }
+
+                    try {
+                        $db->beginTransaction();
+
+                        $sqlCache .= implode(", ", $valuesCache) . " ON DUPLICATE KEY UPDATE 
+                            is_online = VALUES(is_online),
+                            players_online = VALUES(players_online),
+                            players_max = VALUES(players_max),
+                            version = VALUES(version),
+                            ping_ms = VALUES(ping_ms),
+                            last_checked_at = NOW()";
+
+                        $stmtCache = $db->prepare($sqlCache);
+                        $stmtCache->execute($paramsCache);
+
+                        $sqlStats .= implode(", ", $valuesStats);
+                        $stmtStats = $db->prepare($sqlStats);
+                        $stmtStats->execute($paramsStats);
+
+                        $db->commit();
+                        
+                        echo "[Daemon] Chunk " . ($index + 1) . " processed. Online in chunk: {$onlineCount}/" . count($chunk) . "\n";
+                    } catch (\Throwable $e) {
+                        if ($db->inTransaction()) {
+                            $db->rollBack();
+                        }
+                        echo "[Daemon] Error inserting chunk " . ($index + 1) . " to DB: " . $e->getMessage() . "\n";
+                    }
+
+                    // Process next chunk
+                    $processChunk($index + 1);
+                },
+                function(\Exception $e) use ($processChunk, $index) {
+                    echo "[Daemon] Error pinging chunk " . ($index + 1) . ": " . $e->getMessage() . "\n";
+                    // Try next chunk anyway
+                    $processChunk($index + 1);
+                }
+            );
+        };
+
+        // Start processing recursively
+        $processChunk(0);
+        
+    } catch (\Throwable $e) {
+        echo "[Daemon] DB Error: " . $e->getMessage() . "\n";
+        $isRunning = false;
+    }
+};
+
+// Start the first cycle immediately
+$runPingCycle();
+
+// Schedule subsequent cycles
+Loop::addPeriodicTimer($cronIntervalSeconds, $runPingCycle);
+
+Loop::run();

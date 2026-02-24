@@ -44,20 +44,14 @@
 .card,
 .server-card,
 .stat-card {
-    background: var(--bg-card) !important;
-    border: 1px solid var(--border-color) !important;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
 }
 
 .server-card:hover,
 .card:hover,
 .stat-card:hover {
-    border-color: var(--accent-green) !important;
-}
-
-/* Override inline gradient styles on highlighted servers */
-.server-card[style*="linear-gradient"] {
-    background: var(--bg-card) !important;
-    border-left: 4px solid var(--accent-gold) !important;
+    border-color: var(--accent-green);
 }
 
 /* Solid inputs and blocks */
