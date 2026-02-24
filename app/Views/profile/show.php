@@ -68,7 +68,69 @@ $avatar = \App\Models\User::getAvatar($user, $achievements ?? []);
                     <div class="text-muted text-uppercase mt-2" style="font-size: 0.8rem; font-weight: 600; letter-spacing: 0.5px;">Votes</div>
                 </div>
             </div>
-            
+
+            <?php
+                // Rank color mapping
+                $rankColors = [
+                    'Novice' => '#94a3b8', 'Bronze' => '#cd7f32', 'Silver' => '#c0c0c0',
+                    'Gold' => '#fbbf24', 'Diamond' => '#22d3ee', 'Legendary' => '#f43f5e',
+                ];
+                $rankColor = $rankColors[$rankData['current']] ?? '#94a3b8';
+            ?>
+
+            <!-- Rank Progress -->
+            <div class="mt-4 pt-4 w-100" style="border-top: 1px solid var(--border-color); max-width: 800px;">
+                <div class="card" style="padding: 24px 30px; border-radius: 16px; border: 1px solid <?= $rankColor ?>30; background: <?= $rankColor ?>08;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="d-flex align-items-center" style="gap: 12px;">
+                            <div style="width: 44px; height: 44px; border-radius: 50%; background: <?= $rankColor ?>20; border: 2px solid <?= $rankColor ?>; display: flex; align-items: center; justify-content: center;">
+                                <i class="fas fa-shield-halved" style="font-size: 18px; color: <?= $rankColor ?>;"></i>
+                            </div>
+                            <div>
+                                <div style="font-family: var(--font-heading); font-size: 1.2rem; font-weight: 800; color: <?= $rankColor ?>;">
+                                    <?= e($rankData['current']) ?>
+                                </div>
+                                <div class="text-muted" style="font-size: 0.85rem;">
+                                    <?= number_format($rankData['points']) ?> XP
+                                </div>
+                            </div>
+                        </div>
+                        <?php if ($rankData['next']): ?>
+                            <div class="text-right">
+                                <div class="text-muted" style="font-size: 0.8rem;">Next rank</div>
+                                <div style="font-weight: 700; color: var(--text-primary);"><?= e($rankData['next']) ?></div>
+                            </div>
+                        <?php else: ?>
+                            <div style="font-weight: 700; color: <?= $rankColor ?>;">
+                                <i class="fas fa-crown mr-1"></i> Max Rank
+                            </div>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Progress Bar -->
+                    <div style="width: 100%; height: 10px; background: var(--bg-body); border-radius: 10px; overflow: hidden; position: relative;">
+                        <div class="rank-progress-fill" style="
+                            width: <?= $rankData['progress'] ?>%;
+                            height: 100%;
+                            background: linear-gradient(90deg, <?= $rankColor ?>, <?= $rankColor ?>cc);
+                            border-radius: 10px;
+                            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+                            box-shadow: 0 0 8px <?= $rankColor ?>80;
+                        "></div>
+                    </div>
+
+                    <?php if ($rankData['next']): ?>
+                        <div class="d-flex justify-content-between mt-2" style="font-size: 0.8rem;">
+                            <span class="text-muted"><?= number_format($rankData['prevThreshold']) ?> XP</span>
+                            <span style="color: var(--text-primary); font-weight: 600;">
+                                <?= number_format($rankData['remaining']) ?> XP remaining
+                            </span>
+                            <span class="text-muted"><?= number_format($rankData['nextThreshold']) ?> XP</span>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
             <?php if (!empty($achievements)): ?>
                 <div class="mt-4 pt-4 w-100" style="border-top: 1px solid var(--border-color); max-width: 800px; text-align: left;">
                     <h4 class="mb-3" style="font-family: var(--font-heading); font-size: 1.1rem; color: var(--text-primary); text-align: center;"><i class="fas fa-trophy text-gold mr-2"></i> Earned Trophies</h4>

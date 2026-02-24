@@ -24,14 +24,16 @@ $router->get('/post/{id}', [PostController::class, 'show']);
 $router->get('/users', [\App\Controllers\UserController::class, 'index']);
 $router->get('/user/{username}', [\App\Controllers\ProfileController::class, 'show']);
 $router->get('/sitemap.xml', [\App\Controllers\SitemapController::class, 'index']);
+$router->get('/leaderboard', [\App\Controllers\LeaderboardController::class, 'index']);
 
 // Internal API Routes (for the site itself)
 $router->get('/api/server/{id}/banner.png', [\App\Controllers\Api\BannerController::class, 'generate']);
 
 // Public Developer API Routes (JSON)
 $router->group('/api/v1', function ($router) {
+    $router->get('/servers', [\App\Controllers\Api\PublicApiController::class, 'servers']);
     $router->get('/server/{id}', [\App\Controllers\Api\PublicApiController::class, 'server']);
-}, [\App\Middleware\CorsMiddleware::class, \App\Middleware\RateLimitMiddleware::class]);
+}, [\App\Middleware\CorsMiddleware::class, \App\Middleware\ApiKeyMiddleware::class, \App\Middleware\RateLimitMiddleware::class]);
 
 // Reviews
 $router->post('/server/{id}/review', [\App\Controllers\ReviewController::class, 'store'], [AuthMiddleware::class, CsrfMiddleware::class]);
@@ -66,6 +68,10 @@ $router->group('/dashboard', function ($router) {
     
     $router->get('/settings', [DashboardController::class, 'settings']);
     $router->post('/settings', [DashboardController::class, 'updateSettings']);
+    
+    $router->get('/api-keys', [DashboardController::class, 'apiKeys']);
+    $router->post('/api-keys/generate', [DashboardController::class, 'generateApiKey']);
+    $router->post('/api-keys/revoke', [DashboardController::class, 'revokeApiKey']);
 }, [AuthMiddleware::class, CsrfMiddleware::class]);
 
 // Admin (admin required)

@@ -260,4 +260,41 @@ class DashboardController extends Controller
         flash('success', 'Settings updated.');
         return $this->redirect('/dashboard/settings');
     }
+
+    public function apiKeys(Request $request): Response
+    {
+        $user = auth();
+        $keys = \App\Models\ApiKey::getByUser($user['id']);
+        $newKey = flash('new_api_key');
+
+        return $this->view('dashboard.api-keys', [
+            'keys' => $keys,
+            'newKey' => $newKey,
+        ]);
+    }
+
+    public function generateApiKey(Request $request): Response
+    {
+        $user = auth();
+        $name = sanitize($request->input('name', 'Default'));
+
+        if (\App\Models\ApiKey::countByUser($user['id']) >= 5) {
+            flash('error', 'Maximum 5 API keys per user.');
+            return $this->redirect('/dashboard/api-keys');
+        }
+
+        $key = \App\Models\ApiKey::generate($user['id'], $name ?: 'Default');
+        flash('new_api_key', $key);
+        flash('success', 'API key generated successfully.');
+        return $this->redirect('/dashboard/api-keys');
+    }
+
+    public function revokeApiKey(Request $request): Response
+    {
+        $user = auth();
+        $keyId = (int) $request->input('key_id');
+        \App\Models\ApiKey::deactivate($keyId, $user['id']);
+        flash('success', 'API key revoked.');
+        return $this->redirect('/dashboard/api-keys');
+    }
 }
