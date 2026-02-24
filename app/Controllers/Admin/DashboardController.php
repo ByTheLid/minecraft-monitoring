@@ -38,12 +38,62 @@ class DashboardController extends Controller
             'server' => $_SERVER['SERVER_SOFTWARE'] ?? 'Unknown',
         ];
 
+        // Daemon Status
+        $daemonStatusFile = __DIR__ . '/../../../storage/cache/ping_daemon.json';
+        $daemonStatus = ['status' => 'stopped'];
+        if (file_exists($daemonStatusFile)) {
+            $data = json_decode(file_get_contents($daemonStatusFile), true);
+            if ($data) {
+                // Determine if it is actually alive based on last update (e.g., 5 mins)
+                $lastPing = strtotime($data['last_update'] ?? '0');
+                if (time() - $lastPing < 300) {
+                    $daemonStatus = $data;
+                } else {
+                    $daemonStatus['status'] = 'dead (timeout)';
+                }
+            }
+        }
+
         return $this->view('admin.index', [
             'stats' => $stats,
             'pendingServers' => $pendingServers,
             'recentServers' => $recentServers,
             'topServers' => $topServers,
-            'health' => $health
+            'health' => $health,
+            'daemonStatus' => $daemonStatus
         ]);
+    }
+
+    public function daemonAction(Request $request): Response
+    {
+        $action = $request->input('action');
+        
+        $cacheDir = __DIR__ . '/../../../storage/cache';
+        if (!is_dir($cacheDir)) {
+            mkdir($cacheDir, 0777, true);
+        }
+
+        $cmdFile = escapeshellarg($cacheDir . '/ping_daemon.command');
+        $daemonPath = realpath(__DIR__ . '/../../../daemon/ping_service.php');
+
+        if ($action === 'start') {
+            if (strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                pclose(popen("start /B php " . escapeshellarg($daemonPath) . " > NUL 2>&1", "r"));
+            } else {
+                exec("nohup php " . escapeshellarg($daemonPath) . " > /dev/null 2>&1 &");
+            }
+            // Reset status temporarily
+            file_put_contents($cacheDir . '/ping_daemon.json', json_encode([
+                'status' => 'starting',
+                'last_update' => date('Y-m-d H:i:s'),
+                'servers_pinged' => 0
+            ]));
+            flash('success', 'Ping Daemon start signal sent.');
+        } elseif ($action === 'stop') {
+            file_put_contents($cacheDir . '/ping_daemon.command', 'stop');
+            flash('success', 'Ping Daemon stop signal sent. It will shut down gracefully.');
+        }
+
+        return $this->redirect('/admin');
     }
 }

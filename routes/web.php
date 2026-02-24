@@ -72,6 +72,7 @@ $router->group('/dashboard', function ($router) {
 $router->group('/admin', function ($router) {
     // DashboardStats
     $router->get('', [AdminDashboardController::class, 'index']);
+    $router->post('/daemon', [AdminDashboardController::class, 'daemonAction']);
     
     // Servers
     $router->get('/servers', [AdminServerController::class, 'index']);

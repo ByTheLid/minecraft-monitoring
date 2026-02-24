@@ -3,7 +3,34 @@ $layout = 'admin';
 $adminPage = 'dashboard'; 
 $pageTitle = 'Admin Dashboard'; 
 $extraJs = ['https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js', '/js/admin-charts.js'];
+
+$isDaemonRunning = ($daemonStatus['status'] !== 'stopped' && $daemonStatus['status'] !== 'dead (timeout)');
+$daemonPillClass = $isDaemonRunning ? 'badge-success' : 'badge-danger';
+$daemonStatusText = ucfirst($daemonStatus['status']);
 ?>
+
+<div class="card mb-4" style="border-left: 4px solid <?= $isDaemonRunning ? 'var(--accent-green)' : 'var(--accent-red)' ?>;">
+    <div class="flex-between align-center">
+        <div>
+            <h3 class="m-0 mb-1"><i class="fas fa-microchip"></i> Ping Daemon Status</h3>
+            <div class="text-muted text-sm">
+                State: <span class="badge <?= $daemonPillClass ?>"><?= e($daemonStatusText) ?></span> | 
+                Last Active: <strong><?= e($daemonStatus['last_update'] ?? 'Never') ?></strong> | 
+                Servers Processed: <strong><?= e($daemonStatus['servers_pinged'] ?? 0) ?></strong>
+            </div>
+        </div>
+        <form method="POST" action="/admin/daemon" class="m-0">
+            <?= csrf_field() ?>
+            <?php if ($isDaemonRunning): ?>
+                <input type="hidden" name="action" value="stop">
+                <button type="submit" class="btn btn-danger btn-sm"><i class="fas fa-stop"></i> Stop Daemon</button>
+            <?php else: ?>
+                <input type="hidden" name="action" value="start">
+                <button type="submit" class="btn btn-success btn-sm"><i class="fas fa-play"></i> Start Daemon</button>
+            <?php endif; ?>
+        </form>
+    </div>
+</div>
 
 <div class="dashboard-stats mb-4">
     <div class="stat-card">

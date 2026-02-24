@@ -22,10 +22,39 @@ $pinger = new AsyncMinecraftPing($connector, 5.0);
 $chunkSize = 250; 
 $cronIntervalSeconds = 180; // 3 minutes
 
+$cacheDir = __DIR__ . '/../storage/cache';
+if (!is_dir($cacheDir)) mkdir($cacheDir, 0777, true);
+
+$updateStatus = function($status, $servers = 0) use ($cacheDir) {
+    file_put_contents($cacheDir . '/ping_daemon.json', json_encode([
+        'status' => $status,
+        'last_update' => date('Y-m-d H:i:s'),
+        'servers_pinged' => $servers
+    ]));
+};
+
 $isRunning = false;
 
-$runPingCycle = function() use ($pinger, &$isRunning, $chunkSize) {
+// Command listener
+Loop::addPeriodicTimer(3, function() use ($cacheDir, $updateStatus) {
+    $cmdFile = $cacheDir . '/ping_daemon.command';
+    if (file_exists($cmdFile)) {
+        $cmd = trim(file_get_contents($cmdFile));
+        if ($cmd === 'stop') {
+            unlink($cmdFile);
+            $updateStatus('stopped');
+            echo "[Daemon] Stop command received. Terminating...\n";
+            Loop::stop();
+            exit(0);
+        }
+    }
+});
+
+$updateStatus('idle', 0);
+
+$runPingCycle = function() use ($pinger, &$isRunning, $chunkSize, $updateStatus) {
     if ($isRunning) {
+        $updateStatus('running (busy)', 0);
         echo "[Daemon] Warning: Previous cycle is still running. Skipping this tick.\n";
         return;
     }
@@ -42,8 +71,11 @@ $runPingCycle = function() use ($pinger, &$isRunning, $chunkSize) {
         $total = count($servers);
         echo "[Daemon] Found {$total} servers to ping.\n";
 
+        $updateStatus('running', $total);
+
         if ($total === 0) {
             $isRunning = false;
+            $updateStatus('idle', 0);
             return;
         }
 
@@ -54,6 +86,7 @@ $runPingCycle = function() use ($pinger, &$isRunning, $chunkSize) {
                 $elapsed = round(microtime(true) - $startTime, 2);
                 echo "[Daemon] [" . date('Y-m-d H:i:s') . "] Cycle finished. Total servers: {$total}, Time: {$elapsed}s\n";
                 $isRunning = false;
+                $updateStatus('idle', $total);
                 return;
             }
 
