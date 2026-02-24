@@ -82,7 +82,15 @@ $runPingCycle = function() use ($pinger, &$isRunning, $chunkSize, $updateStatus)
         $chunks = array_chunk($servers, $chunkSize);
         $processChunk = function(int $index) use (&$processChunk, $chunks, $pinger, &$isRunning, $startTime, $total, $db) {
             if (!isset($chunks[$index])) {
-                // All chunks done
+                // All chunks done — recalculate rankings
+                try {
+                    $rankingService = \App\Services\RankingService::createFromSettings();
+                    $recalculated = $rankingService->recalculateAll();
+                    echo "[Daemon] Rankings recalculated for {$recalculated} servers.\n";
+                } catch (\Throwable $e) {
+                    echo "[Daemon] Rankings recalculation error: " . $e->getMessage() . "\n";
+                }
+
                 $elapsed = round(microtime(true) - $startTime, 2);
                 echo "[Daemon] [" . date('Y-m-d H:i:s') . "] Cycle finished. Total servers: {$total}, Time: {$elapsed}s\n";
                 $isRunning = false;

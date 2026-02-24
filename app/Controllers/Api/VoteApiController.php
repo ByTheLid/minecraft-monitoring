@@ -71,6 +71,9 @@ class VoteApiController extends Controller
             "UPDATE server_rankings SET vote_count = ? WHERE server_id = ?"
         )->execute([$newCount, $serverId]);
 
+        // Recalculate rank_score for this server
+        \App\Services\RankingService::createFromSettings()->recalculateServer($serverId);
+
         // --- Votifier / RCON Logic ---
         $rewardStatus = $this->processRewards($serverId, $username, $ip);
 
