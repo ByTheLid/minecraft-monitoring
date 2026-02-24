@@ -25,6 +25,7 @@ $router->get('/users', [\App\Controllers\UserController::class, 'index']);
 $router->get('/user/{username}', [\App\Controllers\ProfileController::class, 'show']);
 $router->get('/sitemap.xml', [\App\Controllers\SitemapController::class, 'index']);
 $router->get('/leaderboard', [\App\Controllers\LeaderboardController::class, 'index']);
+$router->get('/servers/{category}/{value}', [\App\Controllers\SeoController::class, 'filterPage']);
 
 // Internal API Routes (for the site itself)
 $router->get('/api/server/{id}/banner.png', [\App\Controllers\Api\BannerController::class, 'generate']);
@@ -122,5 +123,12 @@ $router->group('/admin', function ($router) {
     $router->post('/achievements/create', [\App\Controllers\Admin\AchievementController::class, 'create']);
     $router->post('/achievements/edit/{id}', [\App\Controllers\Admin\AchievementController::class, 'edit']);
     $router->post('/achievements/delete/{id}', [\App\Controllers\Admin\AchievementController::class, 'delete']);
+
+    // SEO Pages
+    $router->get('/seo', [\App\Controllers\Admin\SeoController::class, 'index']);
+    $router->post('/seo/store', [\App\Controllers\Admin\SeoController::class, 'store']);
+    $router->post('/seo/update/{id}', [\App\Controllers\Admin\SeoController::class, 'update']);
+    $router->post('/seo/delete/{id}', [\App\Controllers\Admin\SeoController::class, 'delete']);
+    $router->post('/seo/recalculate', [\App\Controllers\Admin\SeoController::class, 'recalculate']);
 
 }, [AuthMiddleware::class, AdminMiddleware::class, CsrfMiddleware::class]);

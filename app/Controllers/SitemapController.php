@@ -48,6 +48,17 @@ class SitemapController extends Controller
             ];
         }
 
+        // SEO Filter Pages (only indexed)
+        $seoPages = $db->query("SELECT url_path, updated_at FROM seo_pages WHERE is_indexed = 1")->fetchAll();
+        foreach ($seoPages as $seoPage) {
+            $urls[] = [
+                'loc' => $appUrl . $seoPage['url_path'],
+                'lastmod' => date('Y-m-d', strtotime($seoPage['updated_at'])),
+                'changefreq' => 'daily',
+                'priority' => '0.7'
+            ];
+        }
+
         // Build XML
         $xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"/>');
 
