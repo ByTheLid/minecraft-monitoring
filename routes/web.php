@@ -28,7 +28,7 @@ $router->get('/leaderboard', [\App\Controllers\LeaderboardController::class, 'in
 $router->get('/servers/{category}/{value}', [\App\Controllers\SeoController::class, 'filterPage']);
 
 // Internal API Routes (for the site itself)
-$router->get('/api/server/{id}/banner.png', [\App\Controllers\Api\BannerController::class, 'generate']);
+$router->get('/api/server/{id}/banner', [\App\Controllers\Api\BannerController::class, 'generate']);
 $router->get('/api/server/{id}/analytics', [\App\Controllers\Api\AnalyticsApiController::class, 'getChart']);
 
 // Public Developer API Routes (JSON)

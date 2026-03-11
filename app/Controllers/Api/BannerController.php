@@ -21,12 +21,12 @@ class BannerController extends Controller
         // Configuration
         $width = 468;
         $height = 60;
-        $fontBold = __DIR__ . '/../../../public/fonts/Inter-Bold.ttf';
-        $fontReg = __DIR__ . '/../../../public/fonts/Inter-Regular.ttf';
+        
+        $fontBoldPath = realpath(__DIR__ . '/../../../public/fonts/Inter-Bold.ttf');
+        $fontRegPath = realpath(__DIR__ . '/../../../public/fonts/Inter-Regular.ttf');
 
-        // Check if fonts exist, fallback to root if not (for safety)
-        if (!file_exists($fontBold)) $fontBold = 5; // Built-in font fallback
-        if (!file_exists($fontReg)) $fontReg = 4;
+        $fontBold = $fontBoldPath ?: 5; // Built-in font fallback
+        $fontReg = $fontRegPath ?: 4;
 
         // Create image
         $image = imagecreatetruecolor($width, $height);

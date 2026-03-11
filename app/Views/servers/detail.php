@@ -218,13 +218,13 @@ $extraJs = ['https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js', '/j
                 <h3 class="section-title mb-3" style="font-size: 1.25rem; font-family: var(--font-heading);"><i class="fas fa-code text-primary"></i> Embed Status</h3>
                 <p class="text-muted text-sm mb-4" style="line-height: 1.6;">Copy this HTML code to show your server status dynamically on your website or forum!</p>
                 <div class="mb-4 text-center">
-                    <img src="/api/server/<?= $server['id'] ?>/banner.png" alt="<?= e($server['name']) ?> Banner" style="max-width: 100%; border-radius: var(--radius-sm); border: var(--glass-border); box-shadow: var(--card-shadow);">
+                    <img src="/api/server/<?= $server['id'] ?>/banner" alt="<?= e($server['name']) ?> Banner" style="max-width: 100%; border-radius: var(--radius-sm); border: var(--glass-border); box-shadow: var(--card-shadow);">
                 </div>
                 <div class="form-group flex flex-column gap-2">
                     <?php 
                         $scheme = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http';
                         $appUrl = rtrim(setting('app_url', $scheme . '://' . $_SERVER['HTTP_HOST']), '/');
-                        $bannerUrl = $appUrl . '/api/server/' . $server['id'] . '/banner.png';
+                        $bannerUrl = $appUrl . '/api/server/' . $server['id'] . '/banner';
                         $serverUrl = $appUrl . '/server/' . $server['id'];
                         $embedCode = '<a href="' . $serverUrl . '"><img src="' . $bannerUrl . '" alt="' . htmlspecialchars($server['name'], ENT_QUOTES) . '"></a>';
                     ?>
