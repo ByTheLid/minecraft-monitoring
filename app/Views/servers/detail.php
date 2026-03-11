@@ -20,7 +20,12 @@ $extraJs = ['https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js', '/j
         
         <div class="server-detail-info" style="flex-grow: 1;">
             <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap: 15px;">
-                <h1 class="server-detail-title" style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0; color: var(--text-primary);"><?= e($server['name']) ?></h1>
+                <div class="d-flex align-items-center" style="gap: 10px;">
+                    <h1 class="server-detail-title" style="font-family: var(--font-heading); font-size: 2.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 0; color: var(--text-primary);"><?= e($server['name']) ?></h1>
+                    <?php if ($server['is_verified'] ?? false): ?>
+                        <span class="text-green" title="Verified Server" style="font-size: 1.5rem;"><i class="fas fa-check-circle"></i></span>
+                    <?php endif; ?>
+                </div>
                 
                 <button class="btn btn-vote btn-lg" data-server-id="<?= $server['id'] ?>" onclick="voteServer(<?= $server['id'] ?>, this)">
                     <i class="fas fa-caret-up"></i> Vote (<?= (int)($server['vote_count'] ?? 0) ?>)

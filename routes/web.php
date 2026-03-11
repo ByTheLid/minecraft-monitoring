@@ -29,6 +29,7 @@ $router->get('/servers/{category}/{value}', [\App\Controllers\SeoController::cla
 
 // Internal API Routes (for the site itself)
 $router->get('/api/server/{id}/banner.png', [\App\Controllers\Api\BannerController::class, 'generate']);
+$router->get('/api/server/{id}/analytics', [\App\Controllers\Api\AnalyticsApiController::class, 'getChart']);
 
 // Public Developer API Routes (JSON)
 $router->group('/api/v1', function ($router) {
@@ -77,6 +78,10 @@ $router->group('/dashboard', function ($router) {
     $router->get('/api-keys', [DashboardController::class, 'apiKeys']);
     $router->post('/api-keys/generate', [DashboardController::class, 'generateApiKey']);
     $router->post('/api-keys/revoke', [DashboardController::class, 'revokeApiKey']);
+
+    // Server Verification
+    $router->get('/verify/{id}', [DashboardController::class, 'verifyServerForm']);
+    $router->post('/verify/{id}', [DashboardController::class, 'verifyServer']);
 
     // Two-Factor Authentication
     $router->get('/2fa/setup', [\App\Controllers\TwoFactorController::class, 'setup']);

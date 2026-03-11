@@ -45,6 +45,7 @@
                         <th>Votes</th>
                         <th>Rating</th>
                         <th>Approved</th>
+                        <th>Verified</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -84,6 +85,13 @@
                             <td class="text-gold"><?= round((float)($server['rank_score'] ?? 0), 1) ?></td>
                             <td>
                                 <?= $server['is_approved'] ? '<span class="text-green">Yes</span>' : '<span class="text-muted">Pending</span>' ?>
+                            </td>
+                            <td>
+                                <?php if ($server['is_verified'] ?? false): ?>
+                                    <span class="text-green" title="Verified"><i class="fas fa-check-circle"></i> Yes</span>
+                                <?php else: ?>
+                                    <a href="/dashboard/verify/<?= $server['id'] ?>" class="btn btn-sm" style="border:1px solid var(--text-gold); color:var(--text-gold);"><i class="fas fa-certificate"></i> Verify</a>
+                                <?php endif; ?>
                             </td>
                             <td>
                                 <a href="/dashboard/server/<?= $server['id'] ?>/boost" class="btn btn-sm btn-gold text-dark mb-1" style="display:inline-block;"><i class="fas fa-bolt"></i> Boost</a>

@@ -187,6 +187,9 @@ $avatar = \App\Models\User::getAvatar($user, $achievements ?? []);
                             
                             <h3 class="server-title mb-3" style="font-size: 1.4rem;">
                                 <a href="/server/<?= $server['id'] ?>" style="color: var(--text-color); text-decoration: none; font-weight: 800;"><?= e($server['name']) ?></a>
+                                <?php if ($server['is_verified'] ?? false): ?>
+                                    <span class="text-green" title="Verified Server" style="font-size: 16px; margin-left: 5px;"><i class="fas fa-check-circle"></i></span>
+                                <?php endif; ?>
                             </h3>
 
                             <div class="server-stats flex-between" style="background: var(--bg-body); padding: 12px 18px; border-radius: 12px; border: 1px solid var(--border-color);">

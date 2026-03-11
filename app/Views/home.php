@@ -50,6 +50,9 @@
                             <span class="server-rank">#<?= $i + 1 ?></span>
                             <a href="/server/<?= $server['id'] ?>"><?= e($server['name']) ?></a>
                             
+                            <?php if ($server['is_verified'] ?? false): ?>
+                                <span class="text-green" title="Verified Server" style="font-size: 16px; margin-left: 5px;"><i class="fas fa-check-circle"></i></span>
+                            <?php endif; ?>
                             <?php if (!empty($server['stars']) && (int)$server['stars'] > 0): ?>
                                 <span class="server-stars text-gold" style="font-size: 14px; margin-left: 5px;">
                                     <?php for($star = 0; $star < min(3, (int)$server['stars']); $star++): ?>

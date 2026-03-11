@@ -14,8 +14,8 @@
  ├── Models/       # Работа с БД (Server, User, ApiKey, SeoPage)
  ├── Services/     # Бизнес-логика (SecurityService, RankingService, SeoService)
  └── Views/        # HTML шаблоны (PHP), разбиты по секциям
-/daemon            # Фоновые процессы (ReactPHP, асинхронный пинг серверов)
-/public            # Точка входа (index.php), CSS, JS, Images
+/daemon            # Фоновые процессы (ReactPHP, асинхронный пинг серверов, агрегация аналитики)
+/public            # Точка входа (index.php), CSS, JS (Chart.js), Images, Fonts
 /routes            # Объявление всех URL (web.php, api.php)
 /storage           # Хранилище логов, кеша, загрузок
 /tests             # Легкие юнит-тесты для ключевых классов
@@ -30,6 +30,7 @@
 - Асинхронный, параллельный опрос (ping) сотен серверов.
 - Сохранение `favicon_base64`, онлайн-статуса и MOTD в таблицу-кеш `server_status_cache`.
 - Глобальный пересчёт рейтинга (`RankingService::recalculateAll()`) после каждого полного цикла.
+- **Analytics Aggregator**: Автоматическая компрессия сырых пингов (`server_stats`) в почасовую аналитику (`server_analytics_cache`) прямо в EventLoop.
 
 ### 2. Геймификация (Gamification)
 Пользователи зарабатывают опыт (XP/points) за действия на сайте (голосования, отзывы).

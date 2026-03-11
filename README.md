@@ -1,14 +1,17 @@
-# MC Monitor — Minecraft Server Monitoring v2.1
+# MC Monitor — Minecraft Server Monitoring v2.2
 
 Real-time, extremely fast monitoring platform for Minecraft servers featuring asynchronous pinging, composite rankings, gamification, and adaptive security.
 
-## 🔥 Key Features (v2.1)
+## 🔥 Key Features (v2.2)
 
 - **Asynchronous Daemon (ReactPHP)** — extremely fast parallel server polling, saving historical status and favicon without blocking the main app.
 - **Advanced Gamification** — user experience points, real-time rank progression bars, seasonal leaderboards, and achievement badges.
 - **Two-Factor Authentication (TOTP)** — built-in RFC 6238 implementation with Backup Codes and a "Soft-Lock" Grace Period for high-risk accounts.
 - **Programmatic SEO** — automatic "Threshold Generator" prioritizing indexing for high-quality pages (e.g. `Version + Mode`).
 - **High-Performance Public API** — read-only REST endpoint with Cursor-based pagination, protected by per-user manual API keys and rate limiting.
+- **Server Verification (MOTD)** — ownership proof system giving a green `✔️ Verified` badge and ranking bonus.
+- **Dynamic Banners (GD)** — real-time generated PNG userbars with gradients and TTF fonts for external embedding.
+- **Advanced Analytics (Chart.js)** — hourly aggregated server stats with dual-axis interactive charts (Players & Uptime).
 - **Rankings Logic** — composite scoring based on votes, dynamic 24h average online, precision uptime percent, and boost points.
 - **Admin Panel** — server moderation, user management, boost/payments tracking, achievable badges editor, SEO management.
 

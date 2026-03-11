@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [v2.2.0] - 2026-03-11
+
+### Added
+- **Server Verification**: Added MOTD-based ownership verification for server admins. Verifying a server grants a SEO & Trust rank bonus (+5 points) and displays a green `✔️ Verified` badge.
+- **Dynamic Playerbar Banners**: Custom GD-based endpoint (`/api/server/{id}/banner.png`) to generate real-time 468x60 server banners containing custom TTF fonts, right-aligned stats, favicons, and background gradients.
+- **Deep Analytics**: Chart.js integration on the server detail page rendering multi-axis data (Average Online vs Uptime percent).
+- **Analytics Aggregator**: A non-blocking asynchronous routine runs within `ping_service.php` every 10 minutes to safely crunch millions of pings into hourly statistical rows inside `server_analytics_cache`.
+
+## [v2.1.0] - 2026-03-09
 
 ### Added
 - **Gamification Features**: Rank Progress Bar on user profiles and a Monthly Leaderboard (`/leaderboard`).

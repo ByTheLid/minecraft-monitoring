@@ -202,4 +202,34 @@ $runPingCycle();
 // Schedule subsequent cycles
 Loop::addPeriodicTimer($cronIntervalSeconds, $runPingCycle);
 
+// Analytics Aggregator (Hourly crunching)
+$runAnalyticsAggregator = function() {
+    echo "[Daemon] [" . date('Y-m-d H:i:s') . "] Running Hourly Analytics Aggregator...\n";
+    try {
+        $db = Database::getInstance();
+        $db->exec("
+            INSERT INTO server_analytics_cache (server_id, date_hour, avg_players, is_online_percent)
+            SELECT 
+                server_id,
+                DATE_FORMAT(checked_at, '%Y-%m-%d %H:00:00') as date_hour,
+                ROUND(AVG(players_online)) as avg_players,
+                ROUND(AVG(is_online) * 100, 2) as is_online_percent
+            FROM server_stats
+            WHERE checked_at >= DATE_SUB(NOW(), INTERVAL 2 HOUR)
+            GROUP BY server_id, date_hour
+            ON DUPLICATE KEY UPDATE
+                avg_players = VALUES(avg_players),
+                is_online_percent = VALUES(is_online_percent)
+        ");
+        echo "[Daemon] Hourly Analytics Aggregated successfully.\n";
+    } catch (\Throwable $e) {
+        echo "[Daemon] Analytics Aggregator Error: " . $e->getMessage() . "\n";
+    }
+};
+
+// Start first analytics crunch
+$runAnalyticsAggregator();
+// Schedule every 10 minutes to keep current hour graphs semi-live
+Loop::addPeriodicTimer(600, $runAnalyticsAggregator);
+
 Loop::run();

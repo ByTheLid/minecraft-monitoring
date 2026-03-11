@@ -30,12 +30,18 @@ class RankingService
         );
     }
 
-    public function calculateScore(int $votes, int $boostPoints, float $normalizedOnline, float $uptimePercent): float
+    public function calculateScore(int $votes, int $boostPoints, float $normalizedOnline, float $uptimePercent, bool $isVerified = false): float
     {
-        return ($votes * $this->kv) + 
-               ($boostPoints * $this->kb) + 
-               ($normalizedOnline * $this->ko) + 
-               ($uptimePercent * $this->ku);
+        $base = ($votes * $this->kv) + 
+                ($boostPoints * $this->kb) + 
+                ($normalizedOnline * $this->ko) + 
+                ($uptimePercent * $this->ku);
+                
+        if ($isVerified) {
+            $base += 5.0; // SEO & Trust bonus
+        }
+        
+        return $base;
     }
 
     /**
@@ -67,8 +73,9 @@ class RankingService
 
         // Step 2: Recalculate rank_score for each server
         $rows = $db->query("
-            SELECT server_id, vote_count, boost_points, avg_online, uptime_percent
-            FROM server_rankings
+            SELECT sr.server_id, sr.vote_count, sr.boost_points, sr.avg_online, sr.uptime_percent, s.is_verified
+            FROM server_rankings sr
+            JOIN servers s ON s.id = sr.server_id
         ")->fetchAll(\PDO::FETCH_ASSOC);
 
         if (empty($rows)) {
@@ -86,7 +93,8 @@ class RankingService
                 (int) $row['vote_count'],
                 (int) $row['boost_points'],
                 $normalizedOnline,
-                (float) $row['uptime_percent']
+                (float) $row['uptime_percent'],
+                (bool) $row['is_verified']
             );
             $stmt->execute([round($score, 4), $row['server_id']]);
             $count++;
@@ -102,7 +110,12 @@ class RankingService
     {
         $db = Database::getInstance();
 
-        $row = $db->prepare("SELECT vote_count, boost_points, avg_online, uptime_percent FROM server_rankings WHERE server_id = ?");
+        $row = $db->prepare("
+            SELECT sr.vote_count, sr.boost_points, sr.avg_online, sr.uptime_percent, s.is_verified 
+            FROM server_rankings sr
+            JOIN servers s ON s.id = sr.server_id
+            WHERE sr.server_id = ?
+        ");
         $row->execute([$serverId]);
         $data = $row->fetch(\PDO::FETCH_ASSOC);
 
@@ -118,7 +131,8 @@ class RankingService
             (int) $data['vote_count'],
             (int) $data['boost_points'],
             $normalizedOnline,
-            (float) $data['uptime_percent']
+            (float) $data['uptime_percent'],
+            (bool) $data['is_verified']
         );
 
         $db->prepare("UPDATE server_rankings SET rank_score = ?, calculated_at = NOW() WHERE server_id = ?")

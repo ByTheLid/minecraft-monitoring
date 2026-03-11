@@ -7,6 +7,7 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Models\Server;
 use App\Models\Setting;
+use App\Services\MinecraftPing;
 
 class DashboardController extends Controller
 {
@@ -296,5 +297,84 @@ class DashboardController extends Controller
         \App\Models\ApiKey::deactivate($keyId, $user['id']);
         flash('success', 'API key revoked.');
         return $this->redirect('/dashboard/api-keys');
+    }
+
+    public function verifyServerForm(Request $request): Response
+    {
+        $id = (int) $request->param('id');
+        $server = Server::find($id);
+
+        if (!$server || ($server['user_id'] != auth()['id'] && !is_admin())) {
+            return $this->redirect('/dashboard');
+        }
+
+        if ($server['is_verified'] ?? false) {
+            flash('success', 'Server is already verified.');
+            return $this->redirect('/dashboard');
+        }
+
+        // Generate token if not exists
+        if (empty($server['verify_token'])) {
+            $token = 'MCM-' . substr(md5(uniqid((string)rand(), true)), 0, 8);
+            Server::update($id, ['verify_token' => $token]);
+            $server['verify_token'] = $token;
+        }
+
+        return $this->view('dashboard.verify-server', ['server' => $server]);
+    }
+
+    public function verifyServer(Request $request): Response
+    {
+        $id = (int) $request->param('id');
+        $server = Server::find($id);
+
+        if (!$server || ($server['user_id'] != auth()['id'] && !is_admin())) {
+            return $this->redirect('/dashboard');
+        }
+
+        if ($server['is_verified'] ?? false) {
+            return $this->redirect('/dashboard');
+        }
+
+        $token = $server['verify_token'];
+        if (!$token) {
+            flash('error', 'Token not found. Please reload the page.');
+            return $this->redirect("/dashboard/verify/{$id}");
+        }
+
+        // Ping server to check MOTD
+        $ping = new MinecraftPing($server['ip'], $server['port'], 3);
+        $status = $ping->ping();
+
+        if (!$status) {
+            flash('error', 'Could not connect to the server. Is it online?');
+            return $this->redirect("/dashboard/verify/{$id}");
+        }
+
+        $motd = '';
+        if (isset($status['description'])) {
+            if (is_array($status['description']) && isset($status['description']['text'])) {
+                $motd = $status['description']['text'];
+                if (isset($status['description']['extra'])) {
+                    foreach ($status['description']['extra'] as $extra) {
+                        $motd .= $extra['text'] ?? '';
+                    }
+                }
+            } else {
+                $motd = is_string($status['description']) ? $status['description'] : '';
+            }
+        }
+        
+        // Remove formatting codes
+        $motdClean = preg_replace('/[§&][0-9a-fk-or]/i', '', $motd);
+        
+        if (strpos($motdClean, $token) !== false) {
+            Server::update($id, ['is_verified' => 1, 'verify_token' => null]);
+            flash('success', 'Server successfully verified! ✔️');
+            return $this->redirect('/dashboard');
+        }
+
+        flash('error', "Verification failed. Token '{$token}' not found in MOTD. Current MOTD: " . htmlspecialchars(substr($motdClean, 0, 50)));
+        return $this->redirect("/dashboard/verify/{$id}");
     }
 }

@@ -13,78 +13,129 @@ class BannerController extends Controller
         $id = (int) $request->param('id');
         $server = Server::getDetail($id);
 
-        // Constants for the canvas
-        $width = 468;
-        $height = 80;
+        if (!$server || !$server['is_active']) {
+            $this->send404Banner();
+            return;
+        }
 
-        // Create the image canvas
+        // Configuration
+        $width = 468;
+        $height = 60;
+        $fontBold = __DIR__ . '/../../../public/fonts/Inter-Bold.ttf';
+        $fontReg = __DIR__ . '/../../../public/fonts/Inter-Regular.ttf';
+
+        // Check if fonts exist, fallback to root if not (for safety)
+        if (!file_exists($fontBold)) $fontBold = 5; // Built-in font fallback
+        if (!file_exists($fontReg)) $fontReg = 4;
+
+        // Create image
         $image = imagecreatetruecolor($width, $height);
 
         // Colors
-        $bgColor = imagecolorallocate($image, 30, 30, 36); // #1E1E24
-        $textColor = imagecolorallocate($image, 255, 255, 255); // White
-        $subTextColor = imagecolorallocate($image, 150, 150, 150); // Gray
-        $onlineColor = imagecolorallocate($image, 76, 175, 80); // Green
-        $offlineColor = imagecolorallocate($image, 244, 67, 54); // Red
-        $goldColor = imagecolorallocate($image, 255, 193, 7); // Gold
+        $bg = imagecolorallocate($image, 30, 41, 59); // Slate-800
+        $bgAccent = imagecolorallocate($image, 15, 23, 42); // Slate-900
+        $white = imagecolorallocate($image, 255, 255, 255);
+        $gray = imagecolorallocate($image, 148, 163, 184); // Slate-400
+        $green = imagecolorallocate($image, 16, 185, 129); // Emerald-500
+        $red = imagecolorallocate($image, 239, 68, 68); // Red-500
+        $gold = imagecolorallocate($image, 251, 191, 36); // Amber-400
 
         // Fill background
-        imagefilledrectangle($image, 0, 0, $width, $height, $bgColor);
-
-        if (!$server || !$server['is_approved'] || !$server['is_active']) {
-            // Server not found or not active
-            imagestring($image, 5, 20, 30, "Server Not Found or Offline", $offlineColor);
-        } else {
-            // Draw Server Banner
-
-            // Server Name
-            // In a production environment with TTF fonts we would use imagettftext
-            // For universal compatibility here without requiring TTF files, we use imagestring
-            $name = $server['name'];
-            if (strlen($name) > 25) {
-                $name = substr($name, 0, 22) . '...';
-            }
-            imagestring($image, 5, 15, 15, $name, $textColor);
-
-            // Server IP
-            $ipPort = $server['ip'] . ($server['port'] != 25565 ? ':' . $server['port'] : '');
-            imagestring($image, 4, 15, 35, $ipPort, $subTextColor);
-
-            // Version
-            imagestring($image, 3, 15, 55, "Version: " . ($server['version'] ?? 'Unknown'), $subTextColor);
-
-            // Status & Players (Right side)
-            $isOnline = $server['is_online'] ?? false;
-            if ($isOnline) {
-                $statusText = "ONLINE";
-                $statusColor = $onlineColor;
-                $playersText = ($server['players_online'] ?? 0) . " / " . ($server['players_max'] ?? 0) . " Players";
-            } else {
-                $statusText = "OFFLINE";
-                $statusColor = $offlineColor;
-                $playersText = "0 / 0 Players";
-            }
-
-            // Align status text to right
-            $statusX = $width - (strlen($statusText) * 9) - 15;
-            imagestring($image, 5, $statusX, 15, $statusText, $statusColor);
-
-            // Align players text to right
-            $playersX = $width - (strlen($playersText) * 7) - 15;
-            imagestring($image, 4, $playersX, 35, $playersText, $textColor);
-
-            // Votes
-            $votesText = "Votes: " . ($server['vote_count'] ?? 0);
-            $votesX = $width - (strlen($votesText) * 7) - 15;
-            imagestring($image, 4, $votesX, 55, $votesText, $goldColor);
+        imagefilledrectangle($image, 0, 0, $width, $height, $bg);
+        
+        // Draw subtle gradient/accent (left side darker)
+        for ($i = 0; $i < 120; $i++) {
+            $alpha = (int) (127 - ($i * (127/120)));
+            $overlay = imagecolorallocatealpha($image, 15, 23, 42, $alpha);
+            imagefilledrectangle($image, $i*2, 0, ($i*2)+2, $height, $overlay);
         }
 
-        // Output image
-        header('Content-Type: image/png');
-        header('Cache-Control: no-cache, no-store, must-revalidate');
-        header('Pragma: no-cache');
-        header('Expires: 0');
+        // Add Favicon
+        if (!empty($server['favicon_base64'])) {
+            $faviconData = explode(',', $server['favicon_base64']);
+            if (isset($faviconData[1])) {
+                $iconData = base64_decode($faviconData[1]);
+                $icon = @imagecreatefromstring($iconData);
+                if ($icon) {
+                    imagecopyresampled($image, $icon, 10, 10, 0, 0, 40, 40, imagesx($icon), imagesy($icon));
+                    imagedestroy($icon);
+                } else {
+                    imagefilledrectangle($image, 10, 10, 50, 50, $bgAccent); // fallback
+                }
+            }
+        } else {
+            imagefilledrectangle($image, 10, 10, 50, 50, $bgAccent);
+        }
+
+        // Server Name & Verified Badge
+        $name = mb_substr($server['name'], 0, 25);
+        if (is_int($fontBold)) {
+            imagestring($image, $fontBold, 65, 12, $name, $white);
+        } else {
+            imagettftext($image, 14, 0, 65, 28, $white, $fontBold, $name);
+        }
         
+        // IP Address
+        $ipText = $server['ip'] . ($server['port'] != 25565 ? ':' . $server['port'] : '');
+        if (is_int($fontReg)) {
+            imagestring($image, $fontReg, 65, 32, mb_substr($ipText, 0, 35), $gray);
+        } else {
+            imagettftext($image, 11, 0, 65, 48, $gray, $fontReg, mb_substr($ipText, 0, 35));
+        }
+
+        // Right side info (Status & Players)
+        $isOnline = (bool) ($server['is_online'] ?? false);
+        $players = (int)($server['players_online'] ?? 0);
+        $maxPlayers = (int)($server['players_max'] ?? 0);
+
+        // Status Circle
+        $statusColor = $isOnline ? $green : $red;
+        imagefilledellipse($image, $width - 80, 22, 12, 12, $statusColor);
+        
+        if (is_int($fontBold)) {
+            imagestring($image, $fontBold, $width - 65, 14, $isOnline ? 'ONLINE' : 'OFFLINE', $statusColor);
+        } else {
+            imagettftext($image, 10, 0, $width - 60, 26, $statusColor, $fontBold, $isOnline ? 'ONLINE' : 'OFFLINE');
+        }
+
+        // Players count
+        if ($isOnline) {
+            $playerText = "{$players} / {$maxPlayers}";
+            if (is_int($fontReg)) {
+                imagestring($image, $fontReg, $width - (strlen($playerText)*8) - 10, 32, $playerText, $white);
+            } else {
+                $pBox = imagettfbbox(11, 0, $fontReg, $playerText);
+                $pWidth = $pBox[2] - $pBox[0];
+                imagettftext($image, 11, 0, $width - $pWidth - 15, 48, $white, $fontReg, $playerText);
+            }
+        } else {
+            if (is_int($fontReg)) {
+                imagestring($image, $fontReg, $width - 85, 32, "unreachable", $gray);
+            } else {
+                imagettftext($image, 11, 0, $width - 85, 48, $gray, $fontReg, "unreachable");
+            }
+        }
+
+        // Output image with caching headers
+        header('Content-Type: image/png');
+        header('Cache-Control: public, max-age=300'); // Cache for 5 mins
+        imagepng($image);
+        imagedestroy($image);
+        exit;
+    }
+
+    private function send404Banner(): void
+    {
+        $width = 468;
+        $height = 60;
+        $image = imagecreatetruecolor($width, $height);
+        $bg = imagecolorallocate($image, 30, 41, 59);
+        $red = imagecolorallocate($image, 239, 68, 68);
+        imagefilledrectangle($image, 0, 0, $width, $height, $bg);
+        
+        header('Content-Type: image/png');
+        header('Cache-Control: no-store, no-cache, must-revalidate');
+        imagestring($image, 5, 150, 22, 'SERVER NOT FOUND', $red);
         imagepng($image);
         imagedestroy($image);
         exit;

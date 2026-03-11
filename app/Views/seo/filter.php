@@ -41,6 +41,9 @@ $metaDescription = e($seoPage['meta_description']);
                             <a href="/server/<?= $server['id'] ?>" style="color: var(--text-primary); text-decoration: none; font-weight: 700;">
                                 <?= e($server['name']) ?>
                             </a>
+                            <?php if ($server['is_verified'] ?? false): ?>
+                                <span class="text-green" title="Verified Server" style="font-size: 16px; margin-left: 5px;"><i class="fas fa-check-circle"></i></span>
+                            <?php endif; ?>
                         </h3>
                         <?php if ($server['is_online']): ?>
                             <span style="color: #10b981; font-weight: 600; font-size: 0.85rem;">
