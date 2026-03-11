@@ -1,5 +1,6 @@
 # Environment
 .env
+.gitignore
 
 # Dependencies
 vendor/
@@ -27,6 +28,7 @@ review.md
 .idea/
 .vscode/
 .claude/
+.agents/
 *.swp
 *.swo
 *~
